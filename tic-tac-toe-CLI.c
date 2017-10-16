@@ -17,7 +17,7 @@ int main (int argc, char **argv) {
 	int player_num = 0;
 	int quit = 0;
 	int num_moves = 0;
-	int moves[9];
+	int moves[9]; //-1 for empty slot, 0 for player1 and 1 for player2
 
 	if ((players = malloc(sizeof(player*) * 2)) == NULL) {
 		perror("malloc");
@@ -41,6 +41,12 @@ int main (int argc, char **argv) {
 	return(0);
 }
 
+/*
+* Initializes the players and the board
+*
+* @param players: an array of size 2 that contains the player information
+* @param moves: the moves made on the board
+*/
 int initGame(player **players, int *moves) {
 	int i;
 
@@ -66,6 +72,13 @@ int initGame(player **players, int *moves) {
 	return(0);
 }
 
+/*
+* Draws the game board
+*
+* @param players: an array of 2 player struct
+* @param num_moves: number of moves that has been played
+* @param moves: a reference to a list of player's moves
+*/
 void drawBoard(player **players, int num_moves, int *moves) {
 	int row, col;
 	for (row = 0; row < 3; row++) {
@@ -87,6 +100,13 @@ void drawBoard(player **players, int num_moves, int *moves) {
 	printf("\n");
 }
 
+/*
+* Allow player to make a move
+* @param players: an array of 2 player struct
+* @param num_moves: a reference to the number of moves that has been played
+* @param moves: a reference to a list of moves that has been made so far
+* @param player_num: a reference to a variable that keeps track whose turn it is
+*/
 void makeMove(player **players, int *num_moves, int *moves, int *player_num) {
 	int move;
 	scanf("%d", &move);
