@@ -10,6 +10,7 @@ typedef struct
 extern int initGame(player **players, int *moves);
 extern void drawBoard(player **players, int num_moves, int *moves);
 extern void makeMove(player **players, int *num_moves, int *moves, int *player_num);
+extern int isWin(int *moves);
 
 int main (int argc, char **argv) {
 	player **players;
@@ -33,8 +34,9 @@ int main (int argc, char **argv) {
 	while (!quit) {
 		drawBoard(players, num_moves, moves);
 		makeMove(players, &num_moves, moves, &player_num);
-		if (num_moves == 9) {
-			printf("check win\n");
+		if (isWin(moves) != -1) {
+			printf("Player %d won!\n", isWin(moves) + 1);
+			quit = 1;
 		}
 	}
 
@@ -115,4 +117,29 @@ void makeMove(player **players, int *num_moves, int *moves, int *player_num) {
 		*player_num = *player_num ^ 1;
 		*num_moves += 1;
 	}
+}
+
+/*
+* Returns -1 if no player wins else returns the index of the player who wins
+* 
+* @param moves: the pieces in the board
+*/
+int isWin(int *moves) {
+	int row, col;
+	int win_type;
+
+	// Diagonal Row Win
+	if (moves[0] != -1 && moves[0] == moves[4] && moves[0] == moves[8]) return (moves[0]);
+	if (moves[2] != -1 && moves[2] == moves[4] && moves[2] == moves[6]) return (moves[2]);
+
+	// Horizontal Row Win
+	for (row = 0; row < 3; row++) 
+		if (moves[row*3] != -1 && moves[row*3] == moves[row*3+1] && moves[row*3] == moves[row*3+2]) return(moves[row*3]); 
+	
+
+	// Vertical Row Win
+	for (col = 0; col < 3; col++) 
+		if (moves[col] != -1 && moves[col] == moves[col+3] && moves[col] == moves[col+6]) return(moves[col]); 
+	
+	return -1;
 }
