@@ -50,7 +50,7 @@ int initGame(player **players, int *moves) {
 	
 
 	for (i = 0; i < 9; i++) {
-		moves[i] = 0;
+		moves[i] = -1;
 	}
 
 	return(0);
@@ -61,8 +61,8 @@ void drawBoard(player **players, int num_moves, int *moves) {
 	for (row = 0; row < 3; row++) {
 		for (col = 0; col < 5; col++) {
 			if (col % 2 == 0) { //a slot
-				if (num_moves > 0 && moves[(row*3) + (col/2)] != 0) { //if there is a piece placed
-					printf("%c", moves[(row*3) + (col/2)]);
+				if (num_moves > 0 && moves[(row*3) + (col/2)] != -1) { //if there is a piece placed
+					printf("%c", players[moves[(row*3) + (col/2)]]->piece);
 				}
 				else {
 					printf(" ");
