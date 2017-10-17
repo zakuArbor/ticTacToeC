@@ -33,10 +33,12 @@ int main (int argc, char **argv) {
 
 	while (!quit) {
 		drawBoard(players, num_moves, moves);
-		makeMove(players, &num_moves, moves, &player_num);
 		if (isWin(moves) != -1) {
 			printf("Player %d won!\n", isWin(moves) + 1);
 			quit = 1;
+		}
+		else {
+			makeMove(players, &num_moves, moves, &player_num);
 		}
 	}
 
@@ -111,7 +113,11 @@ void drawBoard(player **players, int num_moves, int *moves) {
 */
 void makeMove(player **players, int *num_moves, int *moves, int *player_num) {
 	int move;
-	scanf("%d", &move);
+	char s[2];
+	printf("Player %d Turn: ", *player_num + 1);
+	scanf("%s", s);
+	move = strtol(s, NULL, 10);
+
 	if (move >= 0 && move < 9 && moves[move] == -1) {
 		moves[move] = *player_num;
 		*player_num = *player_num ^ 1;
@@ -126,7 +132,6 @@ void makeMove(player **players, int *num_moves, int *moves, int *player_num) {
 */
 int isWin(int *moves) {
 	int row, col;
-	int win_type;
 
 	// Diagonal Row Win
 	if (moves[0] != -1 && moves[0] == moves[4] && moves[0] == moves[8]) return (moves[0]);
