@@ -37,6 +37,10 @@ int main (int argc, char **argv) {
 			printf("Player %d won!\n", isWin(moves) + 1);
 			quit = 1;
 		}
+		else if (num_moves == 9) {
+			printf("Game Tied\n");
+			quit = 1;
+		}
 		else {
 			makeMove(players, &num_moves, moves, &player_num);
 		}
