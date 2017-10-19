@@ -4,6 +4,8 @@
 typedef struct 
 {
 	char name[10];
+	int moves[5];
+	int num_moves;
 	char piece; //either x or o
 } player;
 
@@ -31,7 +33,6 @@ int main (int argc, char **argv) {
 	if (initGame(players, moves, &num_moves, &player_num) != 0) {
 		return(1);
 	}
-
 	while (!quit) {
 		drawBoard(players, num_moves, moves);
 		if (isWin(moves) != -1) {
@@ -101,6 +102,15 @@ void resetGame(player **players, int *moves, int *num_moves, int *player_num) {
 
 	*num_moves = 0;
 	*player_num = 0;
+
+	for (i = 0; i < 5; i++) {
+		players[0]->moves[i] = -1;
+		players[1]->moves[i] = -1;
+	}
+
+	players[0]->num_moves = 0;
+	players[1]->num_moves = 0;
+
 	for (i = 0; i < 9; i++) {
 		moves[i] = -1;
 	}
@@ -143,6 +153,7 @@ void drawBoard(player **players, int num_moves, int *moves) {
 */
 void makeMove(player **players, int *num_moves, int *moves, int *player_num) {
 	int move;
+	int player_move = players[*player_num]->num_moves;
 	char s[2];
 	printf("Player %d Turn: ", *player_num + 1);
 	scanf("%s", s);
@@ -152,6 +163,8 @@ void makeMove(player **players, int *num_moves, int *moves, int *player_num) {
 		moves[move] = *player_num;
 		*player_num = *player_num ^ 1;
 		*num_moves += 1;
+		players[*player_num]->moves[player_move] = move;
+		players[*player_num]->num_moves++;
 	}
 }
 
@@ -191,3 +204,4 @@ int reset() {
 	}
 	return(0);
 }
+
