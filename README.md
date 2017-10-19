@@ -2,16 +2,22 @@
 A C network Tic Tac Toe 
 
 ## PLANS
-1. Create Board
+1. Create Board [###### COMPLETED]
   
   + void drawBoard(struct player *player1, struct player *player2, int num_pieces, int *pieces)
-2. Make Move
+2. Make Move [###### COMPLETED]
 
   + void move(struct player *p, int *pieces) 
-3. isWin
+3. isWin [###### COMPLETED]
   
   + check if the player wins
-  
+ 
+3. tie [###### COMPLETED]
+  + check if there is a tie after all pieces have been placed
+
+3. Reset Game [###### COMPLETED]
+  + Reset game after the game finishes
+
 4. Add AI
   
   + use a general breadth search AI
