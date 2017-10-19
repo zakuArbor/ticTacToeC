@@ -7,17 +7,16 @@ typedef struct
 	char piece; //either x or o
 } player;
 
-extern int initGame(player **players, int *moves);
+extern int initGame(player **players, int *moves, int *num_moves, int *player_num);
 extern void drawBoard(player **players, int num_moves, int *moves);
 extern void makeMove(player **players, int *num_moves, int *moves, int *player_num);
 extern int isWin(int *moves);
 
 int main (int argc, char **argv) {
 	player **players;
-
-	int player_num = 0;
+	int num_moves;
+	int player_num;
 	int quit = 0;
-	int num_moves = 0;
 	int moves[9]; //-1 for empty slot, 0 for player1 and 1 for player2
 
 	if ((players = malloc(sizeof(player*) * 2)) == NULL) {
@@ -27,7 +26,7 @@ int main (int argc, char **argv) {
 
 	printf("Hello World\n");
 	
-	if (initGame(players, moves) != 0) {
+	if (initGame(players, moves, &num_moves, &player_num) != 0) {
 		return(1);
 	}
 
@@ -55,8 +54,11 @@ int main (int argc, char **argv) {
 * @param players: an array of size 2 that contains the player information
 * @param moves: the moves made on the board
 */
-int initGame(player **players, int *moves) {
+int initGame(player **players, int *moves, int *num_moves, int *player_num) {
 	int i;
+
+	*num_moves = 0;
+	*player_num = 0;
 
 	if (!(players[0] = malloc(sizeof(player)))) {
 		perror("malloc");
