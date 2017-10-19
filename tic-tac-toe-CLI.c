@@ -8,8 +8,10 @@ typedef struct
 } player;
 
 extern int initGame(player **players, int *moves, int *num_moves, int *player_num);
+extern void resetGame(player **players, int *moves, int *num_moves, int *player_num);
 extern void drawBoard(player **players, int num_moves, int *moves);
 extern void makeMove(player **players, int *num_moves, int *moves, int *player_num);
+extern int reset();
 extern int isWin(int *moves);
 
 int main (int argc, char **argv) {
@@ -34,11 +36,22 @@ int main (int argc, char **argv) {
 		drawBoard(players, num_moves, moves);
 		if (isWin(moves) != -1) {
 			printf("Player %d won!\n", isWin(moves) + 1);
-			quit = 1;
+			if (reset()) {
+				initGame(players, moves, &num_moves, &player_num);
+			}			
+			else {
+				quit = 1;
+			}
 		}
 		else if (num_moves == 9) {
 			printf("Game Tied\n");
-			quit = 1;
+			if (reset()) {
+				initGame(players, moves, &num_moves, &player_num);
+			}			
+			else {
+				quit = 1;
+			}
+			
 		}
 		else {
 			makeMove(players, &num_moves, moves, &player_num);
@@ -55,16 +68,10 @@ int main (int argc, char **argv) {
 * @param moves: the moves made on the board
 */
 int initGame(player **players, int *moves, int *num_moves, int *player_num) {
-	int i;
-
-	*num_moves = 0;
-	*player_num = 0;
-
 	if (!(players[0] = malloc(sizeof(player)))) {
 		perror("malloc");
 		return(1);
 	}
-
 
 	if (!(players[1] = malloc(sizeof(player)))) {
 		perror("malloc");
@@ -74,12 +81,19 @@ int initGame(player **players, int *moves, int *num_moves, int *player_num) {
 	players[0]->piece = 'x';
 	players[1]->piece = 'o';
 	
+	resetGame(players, moves, num_moves, player_num);
 
+	return(0);
+}
+
+void resetGame(player **players, int *moves, int *num_moves, int *player_num) {
+	int i;
+
+	*num_moves = 0;
+	*player_num = 0;
 	for (i = 0; i < 9; i++) {
 		moves[i] = -1;
 	}
-
-	return(0);
 }
 
 /*
@@ -153,4 +167,17 @@ int isWin(int *moves) {
 		if (moves[col] != -1 && moves[col] == moves[col+3] && moves[col] == moves[col+6]) return(moves[col]); 
 	
 	return -1;
+}
+
+/*
+* Return 1 iff user wants to reset game, else return 0
+*/
+int reset() {
+	char s[1];
+	printf("Would you like to reset the game? Enter 1 to reset the game: ");
+	scanf("%s", s);
+	if (strtol(s, NULL, 10) == 1) {
+		return(1);
+	}
+	return(0);
 }
