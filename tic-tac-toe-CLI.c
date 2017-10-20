@@ -1,18 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 typedef struct 
 {
 	char name[10];
-	int moves[5];
-	int num_moves;
 	char piece; //either x or o
+	int isHuman; //1 for human player, 0 for computer player
 } player;
 
 extern int initGame(player **players, int *moves, int *num_moves, int *player_num);
 extern void resetGame(player **players, int *moves, int *num_moves, int *player_num);
 extern void drawBoard(player **players, int num_moves, int *moves);
 extern void makeMove(player **players, int *num_moves, int *moves, int *player_num);
+extern void ai_move(player **players, int *moves, int *player_num, int *num_moves);
+extern void player_move(player **players, int *moves, int* player_num, int *num_moves);
 extern int reset();
 extern int isWin(int *moves);
 
@@ -55,7 +57,7 @@ int main (int argc, char **argv) {
 			
 		}
 		else {
-			makeMove(players, &num_moves, moves, &player_num);
+			player_move(players, moves, &player_num, &num_moves);
 		}
 	}
 
@@ -90,6 +92,41 @@ int initGame(player **players, int *moves, int *num_moves, int *player_num) {
 }
 
 /*
+* Display menu and return:
+* 	0: If multiplayer
+*	1: If single player and player goes first
+*	2: If single player and ai goes first
+*/
+int menu() {
+	int option;
+	char s[2];
+	char c;
+
+	printf("Menu\n");
+	printf("1. Single Player\n");
+	printf("2. Multi Player\n");
+	scanf("%s", s);
+	option = strtol(s, NULL, 10);
+	
+	while (option != 1 || option != 2) {
+		scanf("%s", s);
+		option = strtol(s, NULL, 10);	
+	}
+
+	if (option == 1) {
+		while (tolower(c) != 'y' || tolower(c) != 'n') {
+			printf("Do you wish to go first?[y/n]");
+			scanf("%c", &c);
+		}
+		if (c == 'y') {
+			return(1); 
+		}
+		return(2);
+	}
+	return(0);
+}
+
+/*
 * Resets the game parameters and the board
 *
 @param players: an array of size 2 that contains the player information
@@ -102,14 +139,6 @@ void resetGame(player **players, int *moves, int *num_moves, int *player_num) {
 
 	*num_moves = 0;
 	*player_num = 0;
-
-	for (i = 0; i < 5; i++) {
-		players[0]->moves[i] = -1;
-		players[1]->moves[i] = -1;
-	}
-
-	players[0]->num_moves = 0;
-	players[1]->num_moves = 0;
 
 	for (i = 0; i < 9; i++) {
 		moves[i] = -1;
@@ -142,30 +171,6 @@ void drawBoard(player **players, int num_moves, int *moves) {
 		if (row < 2) printf("\n-----\n");
 	}
 	printf("\n");
-}
-
-/*
-* Allow player to make a move
-* @param players: an array of 2 player struct
-* @param num_moves: a reference to the number of moves that has been played
-* @param moves: a reference to a list of moves that has been made so far
-* @param player_num: a reference to a variable that keeps track whose turn it is
-*/
-void makeMove(player **players, int *num_moves, int *moves, int *player_num) {
-	int move;
-	int player_move = players[*player_num]->num_moves;
-	char s[2];
-	printf("Player %d Turn: ", *player_num + 1);
-	scanf("%s", s);
-	move = strtol(s, NULL, 10);
-
-	if (move >= 0 && move < 9 && moves[move] == -1) {
-		moves[move] = *player_num;
-		*player_num = *player_num ^ 1;
-		*num_moves += 1;
-		players[*player_num]->moves[player_move] = move;
-		players[*player_num]->num_moves++;
-	}
 }
 
 /*
@@ -205,3 +210,80 @@ int reset() {
 	return(0);
 }
 
+/*
+* Allow player to make a move
+*
+* @param players: an array of 2 player struct
+* @param num_moves: a reference to the number of moves that has been played
+* @param moves: a reference to a list of moves that has been made so far
+* @param player_num: a reference to a variable that keeps track whose turn it is
+*/
+void makeMove(player **players, int *num_moves, int *moves, int *player_num) {
+	int move;
+	char s[2];
+
+	printf("Player %d Turn: ", *player_num + 1);
+	scanf("%s", s);
+	move = strtol(s, NULL, 10);
+
+	if (move >= 0 && move < 9 && moves[move] == -1) {
+		moves[move] = *player_num;
+		*player_num = *player_num ^ 1;
+		*num_moves += 1;
+	}
+}
+
+/*
+* AI makes move based on:
+*	1. Preventing the enemy from winning
+*	2. Playing a move to win
+*	3. The first empty spot
+*
+* @param players: an array of 2 player struct
+* @param moves: a reference to a list of moves that has been made so far
+* @param player_num: a reference to a variable that keeps track whose turn it is
+* @param num_moves: a reference to the number of moves that has been played
+*/
+
+void ai_move(player **players, int *moves, int *player_num, int *num_moves) {
+	int i;
+	int enemy_num = *player_num ^ 1;
+
+	//stop opponent from winning or choose a move for ai to win
+	for (i = 0; i < 9; i++)	{
+		if (moves[i] == -1) {
+			moves[i] = enemy_num;
+			if (isWin(moves) != -1) {
+				moves[i] = *player_num;
+			}
+			else {
+				moves[i] = -1;
+			}
+		}
+	}
+
+	//pick the first spot to win
+	for (i = 0; i < 9; i++) {
+		if (moves[i] == -1) {
+			moves[i] = *player_num;
+			break;
+		}
+	}
+	*player_num ^= 1; //switch player
+	*num_moves += 1;
+}
+
+/*
+* A controller that directs either the ai or player to make a turn
+*
+* @param players: an array of 2 player struct
+* @param moves: a reference to a list of moves that has been made so far
+* @param player_num: a reference to a variable that keeps track whose turn it is
+* @param num_moves: a reference to the number of moves that has been played
+*/
+void player_move(player **players, int *moves, int *player_num, int *num_moves) {
+	if (players[*player_num]->isHuman) 
+		makeMove(players, num_moves, moves, player_num);
+	else
+		ai_move(players, moves, player_num, num_moves);
+}
