@@ -2,7 +2,7 @@
 A C network Tic Tac Toe 
 
 ## PLANS
-1. Create Board [###### COMPLETED]
+1. Create Board [ ###### COMPLETED]
   
   + void drawBoard(struct player *player1, struct player *player2, int num_pieces, int *pieces)
 2. Make Move [###### COMPLETED]
@@ -25,6 +25,8 @@ A C network Tic Tac Toe
 5. Add socket
   
   + Add client and server
+    * Try using forks
+    * Think about using threads if applicable
   
 6. GUI
   
