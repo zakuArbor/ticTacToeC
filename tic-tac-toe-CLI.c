@@ -17,6 +17,7 @@ extern void ai_move(player **players, int *moves, int *player_num, int *num_move
 extern void player_move(player **players, int *moves, int* player_num, int *num_moves);
 extern int reset();
 extern int isWin(int *moves);
+extern int menu();
 
 int main (int argc, char **argv) {
 	player **players;
@@ -35,6 +36,21 @@ int main (int argc, char **argv) {
 	if (initGame(players, moves, &num_moves, &player_num) != 0) {
 		return(1);
 	}
+	switch(menu()) {
+		case 0:
+			players[0]->isHuman = 1;
+			players[1]->isHuman = 1;
+			break;
+		case 1:
+			players[0]->isHuman = 1;
+			players[1]->isHuman = 0;	
+			break;
+		case 2:
+			players[0]->isHuman = 0;
+			players[1]->isHuman = 1;
+			break;
+	}
+
 	while (!quit) {
 		drawBoard(players, num_moves, moves);
 		if (isWin(moves) != -1) {
@@ -100,23 +116,24 @@ int initGame(player **players, int *moves, int *num_moves, int *player_num) {
 int menu() {
 	int option;
 	char s[2];
-	char c;
+	char c = 'i'; //some default value that is not 'y' nor 'n'
 
 	printf("Menu\n");
 	printf("1. Single Player\n");
 	printf("2. Multi Player\n");
 	scanf("%s", s);
 	option = strtol(s, NULL, 10);
-	
-	while (option != 1 || option != 2) {
-		scanf("%s", s);
+
+	while (option != 1 && option != 2) {
+		printf("Invalid option! Please input either 1 or 2: ");
+		scanf("%s\n", s);
 		option = strtol(s, NULL, 10);	
 	}
 
 	if (option == 1) {
-		while (tolower(c) != 'y' || tolower(c) != 'n') {
-			printf("Do you wish to go first?[y/n]");
-			scanf("%c", &c);
+		while (tolower(c) != 'y' && tolower(c) != 'n') {
+			printf("Do you wish to go first?[Y/n]: ");
+			scanf(" %c", &c); //extra space in format specifier allows input to ignore leading whitespace chars (including newline)
 		}
 		if (c == 'y') {
 			return(1); 
