@@ -2,11 +2,15 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+typedef int bool;
+#define true 1
+#define false 0
+
 typedef struct 
 {
 	char name[10];
 	char piece; //either x or o
-	int isHuman; //1 for human player, 0 for computer player
+	int isHuman; //true(1) for human player, false(0) for computer player
 } player;
 
 extern int initGame(player **players, int *moves, int *num_moves, int *player_num);
@@ -38,16 +42,16 @@ int main (int argc, char **argv) {
 	}
 	switch(menu()) {
 		case 0:
-			players[0]->isHuman = 1;
-			players[1]->isHuman = 1;
+			players[0]->isHuman = true;
+			players[1]->isHuman = true;
 			break;
 		case 1:
-			players[0]->isHuman = 1;
-			players[1]->isHuman = 0;	
+			players[0]->isHuman = true;
+			players[1]->isHuman = false;	
 			break;
 		case 2:
-			players[0]->isHuman = 0;
-			players[1]->isHuman = 1;
+			players[0]->isHuman = false;
+			players[1]->isHuman = true;
 			break;
 	}
 
@@ -56,7 +60,7 @@ int main (int argc, char **argv) {
 		if (isWin(moves) != -1) {
 			printf("Player %d won!\n", isWin(moves) + 1);
 			if (reset()) {
-				initGame(players, moves, &num_moves, &player_num);
+				resetGame(players, moves, &num_moves, &player_num);
 			}			
 			else {
 				quit = 1;
@@ -65,7 +69,7 @@ int main (int argc, char **argv) {
 		else if (num_moves == 9) {
 			printf("Game Tied\n");
 			if (reset()) {
-				initGame(players, moves, &num_moves, &player_num);
+				resetGame(players, moves, &num_moves, &player_num);
 			}			
 			else {
 				quit = 1;
@@ -187,7 +191,7 @@ void drawBoard(player **players, int num_moves, int *moves) {
 		}
 		if (row < 2) printf("\n-----\n");
 	}
-	printf("\n");
+	printf("\n\n");
 }
 
 /*
@@ -272,6 +276,7 @@ void ai_move(player **players, int *moves, int *player_num, int *num_moves) {
 			moves[i] = enemy_num;
 			if (isWin(moves) != -1) {
 				moves[i] = *player_num;
+				break;
 			}
 			else {
 				moves[i] = -1;
@@ -279,11 +284,13 @@ void ai_move(player **players, int *moves, int *player_num, int *num_moves) {
 		}
 	}
 
-	//pick the first spot to win
-	for (i = 0; i < 9; i++) {
-		if (moves[i] == -1) {
-			moves[i] = *player_num;
-			break;
+	if (moves[i] != *player_num) {
+		//pick the first spot to win
+		for (i = 0; i < 9; i++) {
+			if (moves[i] == -1) {
+				moves[i] = *player_num;
+				break;
+			}
 		}
 	}
 	*player_num ^= 1; //switch player
