@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 
 typedef int bool;
 #define true 1
@@ -125,14 +126,15 @@ int menu() {
 	printf("Menu\n");
 	printf("1. Single Player\n");
 	printf("2. Multi Player\n");
+	printf("Please input either 1 or 2: ");
 	scanf("%s", s);
 	option = strtol(s, NULL, 10);
 
-	while (option != 1 && option != 2) {
+	while (strcmp(s, "1") && strcmp(s, "2")) {
 		printf("Invalid option! Please input either 1 or 2: ");
-		scanf("%s\n", s);
-		option = strtol(s, NULL, 10);	
+		scanf("%s", s);	
 	}
+	option = strtol(s, NULL, 10);
 
 	if (option == 1) {
 		while (tolower(c) != 'y' && tolower(c) != 'n') {
