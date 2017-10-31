@@ -15,14 +15,15 @@ typedef struct
 } player;
 
 extern int initGame(player **players, int *moves, int *num_moves, int *player_num);
+extern int reset();
+extern int isWin(int *moves);
+extern int menu();
 extern void resetGame(player **players, int *moves, int *num_moves, int *player_num);
 extern void drawBoard(player **players, int num_moves, int *moves);
 extern void makeMove(player **players, int *num_moves, int *moves, int *player_num);
 extern void ai_move(player **players, int *moves, int *player_num, int *num_moves);
 extern void player_move(player **players, int *moves, int* player_num, int *num_moves);
-extern int reset();
-extern int isWin(int *moves);
-extern int menu();
+extern void set_players(player **players);
 
 int main (int argc, char **argv) {
 	player **players;
@@ -41,20 +42,8 @@ int main (int argc, char **argv) {
 	if (initGame(players, moves, &num_moves, &player_num) != 0) {
 		return(1);
 	}
-	switch(menu()) {
-		case 0:
-			players[0]->isHuman = true;
-			players[1]->isHuman = true;
-			break;
-		case 1:
-			players[0]->isHuman = true;
-			players[1]->isHuman = false;	
-			break;
-		case 2:
-			players[0]->isHuman = false;
-			players[1]->isHuman = true;
-			break;
-	}
+
+	set_players(players);
 
 	while (!quit) {
 		drawBoard(players, num_moves, moves);
@@ -312,4 +301,25 @@ void player_move(player **players, int *moves, int *player_num, int *num_moves) 
 		makeMove(players, num_moves, moves, player_num);
 	else
 		ai_move(players, moves, player_num, num_moves);
+}
+
+/*
+* Set players to their respective role based on game option
+* @param players: an array of 2 player struct
+*/
+void set_players(player **players) {
+	switch(menu()) {
+		case 0:
+			players[0]->isHuman = true;
+			players[1]->isHuman = true;
+			break;
+		case 1:
+			players[0]->isHuman = true;
+			players[1]->isHuman = false;	
+			break;
+		case 2:
+			players[0]->isHuman = false;
+			players[1]->isHuman = true;
+			break;
+	}
 }
