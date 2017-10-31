@@ -17,8 +17,7 @@ typedef struct
 extern int initGame(player **players, int *moves, int *num_moves, int *player_num);
 extern int reset();
 extern int isWin(int *moves);
-extern int win(player **players, int *moves, int *num_moves, int *player_num);
-extern int tied(player **players, int *moves, int *num_moves, int *player_num);
+extern int isReset(player **players, int *moves, int *num_moves, int *player_num);
 extern int menu();
 extern void resetGame(player **players, int *moves, int *num_moves, int *player_num);
 extern void drawBoard(player **players, int num_moves, int *moves);
@@ -50,10 +49,12 @@ int main (int argc, char **argv) {
 	while (!quit) {
 		drawBoard(players, num_moves, moves);
 		if (isWin(moves) != -1) {
-			quit = win(players, moves, &num_moves, &player_num);
+			printf("Player %d won!\n", isWin(moves) + 1);
+			quit = isReset(players, moves, &num_moves, &player_num);
 		}
 		else if (num_moves == 9) {
-			quit = tied(players, moves, &num_moves, &player_num);		
+			printf("Game Tied\n");
+			quit = isReset(players, moves, &num_moves, &player_num);		
 		}
 		else {
 			player_move(players, moves, &player_num, &num_moves);
@@ -90,7 +91,7 @@ int initGame(player **players, int *moves, int *num_moves, int *player_num) {
 }
 
 /*
-* Reset game if player wishes to replay the game after winning
+* Reset game if player wishes to replay the game
 *
 * @param players: an array of size 2 that contains the player information
 * @param moves: the moves made on the board
@@ -98,29 +99,7 @@ int initGame(player **players, int *moves, int *num_moves, int *player_num) {
 * @param player_num: a reference to the current player's number (which player's turn is it) 
 * @return: 0 if the player wishes to quit else 1 if the player wishes to continue playing
 */
-int win(player **players, int *moves, int *num_moves, int *player_num) {
-	printf("Player %d won!\n", isWin(moves) + 1);
-	if (reset()) {
-		resetGame(players, moves, num_moves, player_num);
-	}			
-	else {
-		return(1);
-	}
-	return(0);
-}
-
-/*
-* Reset game if player wishes to replay the game after the game tied
-*
-* @param players: an array of size 2 that contains the player information
-* @param moves: the moves made on the board
-* @param num_moves: a reference to the number of moves made in the game
-* @param player_num: a reference to the current player's number (which player's turn is it) 
-* @return: 0 if the player wishes to quit else 1 if the player wishes to continue playing
-*/
-
-int tied(player **players, int *moves, int *num_moves, int *player_num) { 
-	printf("Game Tied\n");
+int isReset(player **players, int *moves, int *num_moves, int *player_num) {
 	if (reset()) {
 		resetGame(players, moves, num_moves, player_num);
 	}			
