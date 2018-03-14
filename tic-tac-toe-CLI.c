@@ -102,11 +102,9 @@ int initGame(player **players, int *moves, int *num_moves, int *player_num) {
 int isReset(player **players, int *moves, int *num_moves, int *player_num) {
 	if (reset()) {
 		resetGame(players, moves, num_moves, player_num);
+		return(0);
 	}			
-	else {
-		return(1);
-	}
-	return(0);
+	return(1);
 }
 
 /*
