@@ -97,7 +97,7 @@ int initGame(player **players, int *moves, int *num_moves, int *player_num) {
 * @param moves: the moves made on the board
 * @param num_moves: a reference to the number of moves made in the game
 * @param player_num: a reference to the current player's number (which player's turn is it) 
-* @return: 0 if the player wishes to quit else 1 if the player wishes to continue playing
+* @return: 1 if the player wishes to quit else return 0 if the player wishes to continue playing
 */
 int isReset(player **players, int *moves, int *num_moves, int *player_num) {
 	if (reset()) {
