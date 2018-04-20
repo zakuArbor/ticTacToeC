@@ -252,6 +252,33 @@ void makeMove(player **players, int *num_moves, int *moves, int *player_num) {
 }
 
 /*
+* Find if the player can win with the current board configuration
+*
+* @param: moves: a reference to a list of moves that has been made so far
+* @param player_num: an integer that represents the user that is making the move
+*/
+int move_to_win(int *moves, int player_num) {
+	int win_spot = -1; //default: -1 to indicate no winning spot for the player
+	int i;
+
+	for (i = 0; i < 9; i++)	{
+		if (moves[i] == -1) {
+			moves[i] = player_num;
+			if (isWin(moves) != -1) {
+				moves[i] = -1; //reset tile
+				win_spot = i;
+				break;
+			}
+			else {
+				moves[i] = -1;
+			}
+		}
+	}
+
+	return(win_spot);
+}
+
+/*
 * AI makes move based on:
 *	1. Preventing the enemy from winning
 *	2. Playing a move to win
@@ -264,32 +291,24 @@ void makeMove(player **players, int *num_moves, int *moves, int *player_num) {
 */
 
 void ai_move(player **players, int *moves, int *player_num, int *num_moves) {
-	int i;
+	int i, win_slot;
 	int enemy_num = *player_num ^ 1;
 
-	//stop opponent from winning or choose a move for ai to win
-	for (i = 0; i < 9; i++)	{
-		if (moves[i] == -1) {
-			moves[i] = enemy_num;
-			if (isWin(moves) != -1) {
-				moves[i] = *player_num;
-				break;
-			}
-			else {
-				moves[i] = -1;
-			}
-		}
+	if ((win_slot = move_to_win(moves, *player_num)) != -1 || (win_slot = move_to_win(moves, enemy_num)) != -1) {
+		//First clause checks if the AI can win
+		//Second clause checks if the AI can stop player from winning
+		//Only one of the two clauses will be evaluated to be true due to short circuit if the boolean expression evaluates to true
+		moves[win_slot] = *player_num;
 	}
-
-	if (moves[i] != *player_num) {
-		//pick the first spot to win
+	else { //pick the first empty slot
 		for (i = 0; i < 9; i++) {
 			if (moves[i] == -1) {
 				moves[i] = *player_num;
 				break;
 			}
-		}
+		}	
 	}
+	
 	*player_num ^= 1; //switch player
 	*num_moves += 1;
 }
