@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -5,6 +6,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include "game.h"
 
 
 #ifndef PORT
@@ -33,6 +35,10 @@ void menu(int sock_fd) {
     }
 
     write(sock_fd, s, strlen(s));
+}
+
+void makeMove(player **players, int *num_moves, int *moves, int *player_num) {
+    //TO BE IMPLEMENTED
 }
 
 
