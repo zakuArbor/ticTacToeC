@@ -12,7 +12,7 @@ game-client: game-client.o game.o
 	$(CC) -o $@ $^
 
 game-socketless-client: game-socketless.o game.o
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ -fsanitize=address
 
 game-server.o: game-server.c socket.h game.o
 

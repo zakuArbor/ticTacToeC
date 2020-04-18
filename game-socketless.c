@@ -12,6 +12,7 @@ extern void resetGame(player **players, int *moves, int *num_moves, int *player_
 extern void drawBoard(player **players, int num_moves, int *moves);
 extern void set_players(player **players);
 extern int reset();
+extern void free_players();
 
 int main (int argc, char **argv) {
 	player **players;
@@ -28,7 +29,7 @@ int main (int argc, char **argv) {
 	}
 	
 	if (initGame(players, moves, &num_moves, &player_num) != 0) {
-		return(1);
+		goto terminate;
 	}
 
 	set_players(players);
@@ -47,6 +48,8 @@ int main (int argc, char **argv) {
 			player_move(players, moves, &player_num, &num_moves);
 		}
 	}
+terminate:
+	free_players(players);
 	return(0);
 }
 
