@@ -97,7 +97,7 @@ int main(void) {
 							// 0 <= connections <= 2
 	int player_1 = -1; //keeps track who is the first player to choose their piece
 
-	printf("Hello World\n");
+	int sock_fd = -1;
 
 	if ((players = malloc(sizeof(player*) * 2)) == NULL) {
 		perror("malloc");
@@ -114,7 +114,7 @@ int main(void) {
     }
 
     // Create the socket FD.
-    int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+    sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd < 0) {
         perror("server: socket");
         exit(1);
@@ -133,15 +133,13 @@ int main(void) {
     // Bind the selected port to the socket.
     if (bind(sock_fd, (struct sockaddr *)&server, sizeof(server)) < 0) {
         perror("server: bind");
-        close(sock_fd);
-        exit(1);
+        goto terminate;
     }
 
     // Announce willingness to accept connections on this socket.
     if (listen(sock_fd, MAX_BACKLOG) < 0) {
         perror("server: listen");
-        close(sock_fd);
-        exit(1);
+        goto terminate;
     }
 
     // The client accept - message accept loop. First, we prepare to listen to multiple
@@ -210,6 +208,13 @@ int main(void) {
         }
     }
 
+terminate:
+    if (players) {
+        free_players(players);
+    }
+    if (sock_fd > 0) {
+        close(sock_fd);
+    }
 
     // Should never get here.
     return 1;
