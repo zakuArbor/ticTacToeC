@@ -137,17 +137,21 @@ void player_move(player **players, int *moves, int *player_num, int *num_moves) 
 }
 
 /*
-* Initializes the players and the board
+* Allocate and initializes the players and the board
 *
-* @param players: an array of size 2 that contains the player information
-* @param moves: the moves made on the board
+* @param moves: the moves made on the board (not allocated in the function)
 * @param num_moves: a reference to the number of moves made in the game
 * @param player_num: a reference to the current player's number (which player's turn is it) 
 */
-int initGame(player **players, int *moves, int *num_moves, int *player_num) {
+player * initGame(int *moves, int *num_moves, int *player_num) {
+	if ((players = malloc(sizeof(player*) * 2)) == NULL) {
+		perror("malloc");
+		return NULL;
+	}
+
 	if (!(players[0] = malloc(sizeof(player)))) {
 		perror("malloc");
-		return(1);
+		
 	}
 
 	if (!(players[1] = malloc(sizeof(player)))) {

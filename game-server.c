@@ -99,12 +99,7 @@ int main(void) {
 
 	printf("Hello World\n");
 
-	if ((players = malloc(sizeof(player*) * 2)) == NULL) {
-		perror("malloc");
-		return(1);
-	}
-
-	if (initGame(players, moves, &num_moves, &player_num) != 0) {
+	if (initGame(moves, &num_moves, &player_num) != 0) {
 		return(1);
 	}
 

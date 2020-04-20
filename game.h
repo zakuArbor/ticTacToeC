@@ -19,6 +19,6 @@ void write_move(int *num_moves, int *moves, int *player_num, int move);
 int move_to_win(int *moves, int player_num);
 void ai_move(player **players, int *moves, int *player_num, int *num_moves);
 void player_move(player **players, int *moves, int *player_num, int *num_moves);
-int initGame(player **players, int *moves, int *num_moves, int *player_num);
+int initGame(int *moves, int *num_moves, int *player_num);
 
 #endif
