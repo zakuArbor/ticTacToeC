@@ -4,8 +4,6 @@
 #include <string.h>
 #include "game.h"
 
-extern int initGame(player **players, int *moves, int *num_moves, int *player_num);
-extern int isWin(int *moves);
 extern int isReset(player **players, int *moves, int *num_moves, int *player_num);
 extern int menu();
 extern void resetGame(player **players, int *moves, int *num_moves, int *player_num);

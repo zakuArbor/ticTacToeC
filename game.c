@@ -166,3 +166,20 @@ player * initGame(int *moves, int *num_moves, int *player_num) {
 
 	return(0);
 }
+
+/*
+* Free all allocated data to heap
+*
+* @param players: an array of size 2 that contains the player information
+*/
+void free_players(player **players) {
+	if (!players) {
+		return;
+	}
+	for(int i = 0; i < 2; i++) {
+		if (players[i]) {
+			free(players[i]);
+		}
+	}
+	free(players);
+}
