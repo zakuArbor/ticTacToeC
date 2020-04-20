@@ -48,6 +48,7 @@ int accept_connection(int fd, player **players) {
     }
 
     players[player_index]->fd = client_fd;
+
     return client_fd;
 }
 
@@ -155,9 +156,8 @@ int main(void) {
         int nready = select(max_fd + 1, &listen_fds, NULL, NULL, NULL);
         if (nready == -1) {
             perror("server: select");
-            exit(1);
+            goto terminate;
         }
-        printf("nready: %d\n", nready);
 
         // Is it the original socket? Create a new connection ...
         if (FD_ISSET(sock_fd, &listen_fds)) {
@@ -166,28 +166,6 @@ int main(void) {
                 max_fd = client_fd;
             }
             FD_SET(client_fd, &all_fds);
-            printf("Accepted connection\n");
-
-            printf("returned client_fd %d\n", client_fd);
-            printf("fd: %d\n", players[0]->fd);
-
-            //instead of writing an integer to the client by first converting the int using htonl, I'll just convert the integer to a string
-            char *num_str;
-            sprintf(num_str, "%d",connections);
-            printf("num: %s\n", num_str);
-
-            write(client_fd, num_str, strlen(num_str) + 1);
-            printf("write\n");
-
-            if (!connections) {
-            	player_1 = get_player_index(players, client_fd);
-            }
-
-            /*write(client_fd, "hello world", strlen("hello world"));
-            if (connections == 0) {
-            	//set player
-            	set_players(get_index(players), players);
-            }*/
         }
 
         // Next, check the clients.
@@ -201,8 +179,6 @@ int main(void) {
                     printf("Client %d disconnected\n", client_closed);
                 } else {
                     printf("Echoing message from client %d\n", players[index]->fd);
-                    //write(usernames[index].sock_fd, &);
-                    //printf("%s: %");
                 }
             }
         }

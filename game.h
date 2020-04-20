@@ -13,6 +13,7 @@ typedef struct
 } player;
 
 int isWin(int *moves);
+int initGame(player **players, int *moves, int *num_moves, int *player_num);
 void resetGame(player **players, int *moves, int *num_moves, int *player_num);
 void makeMove(player **players, int *num_moves, int *moves, int *player_num);
 void write_move(int *num_moves, int *moves, int *player_num, int move);
