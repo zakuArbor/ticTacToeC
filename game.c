@@ -124,6 +124,8 @@ void ai_move(player **players, int *moves, int *player_num, int *num_moves) {
 /*
 * A controller that directs either the ai or player to make a turn
 *
+* NOTE: If allocation fails, function will deallocate resources allocated during function call
+*
 * @param players: an array of 2 player struct
 * @param moves: a reference to a list of moves that has been made so far
 * @param player_num: a reference to a variable that keeps track whose turn it is
@@ -134,37 +136,6 @@ void player_move(player **players, int *moves, int *player_num, int *num_moves) 
 		makeMove(players, num_moves, moves, player_num);
 	else
 		ai_move(players, moves, player_num, num_moves);
-}
-
-/*
-* Allocate and initializes the players and the board
-*
-* @param moves: the moves made on the board (not allocated in the function)
-* @param num_moves: a reference to the number of moves made in the game
-* @param player_num: a reference to the current player's number (which player's turn is it) 
-*/
-player * initGame(int *moves, int *num_moves, int *player_num) {
-	if ((players = malloc(sizeof(player*) * 2)) == NULL) {
-		perror("malloc");
-		return NULL;
-	}
-
-	if (!(players[0] = malloc(sizeof(player)))) {
-		perror("malloc");
-		
-	}
-
-	if (!(players[1] = malloc(sizeof(player)))) {
-		perror("malloc");
-		return(1);
-	}
-
-	players[0]->piece = 'x';
-	players[1]->piece = 'o';
-	
-	resetGame(players, moves, num_moves, player_num);
-
-	return(0);
 }
 
 /*
@@ -182,4 +153,39 @@ void free_players(player **players) {
 		}
 	}
 	free(players);
+}
+
+/*
+* Allocate and initializes the players and the board
+*
+* @param moves: the moves made on the board (not allocated in the function)
+* @param num_moves: a reference to the number of moves made in the game
+* @param player_num: a reference to the current player's number (which player's turn is it)
+* @return: a double pointer to an array of size 2 that contains the player information
+*/
+player **initGame(int *moves, int *num_moves, int *player_num) {
+	player **players = NULL;
+	if ((players = malloc(sizeof(player*) * 2)) == NULL) {
+		perror("malloc");
+		return NULL;
+	}
+
+	if (!(players[0] = malloc(sizeof(player)))) {
+		perror("malloc");
+		free_players(players);
+		return NULL;
+	}
+
+	if (!(players[1] = malloc(sizeof(player)))) {
+		perror("malloc");
+		free_players(players);
+		return NULL;
+	}
+
+	players[0]->piece = 'x';
+	players[1]->piece = 'o';
+	
+	resetGame(players, moves, num_moves, player_num);
+
+	return players;
 }

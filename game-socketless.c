@@ -4,7 +4,6 @@
 #include <string.h>
 #include "game.h"
 
-extern int initGame(player **players, int *moves, int *num_moves, int *player_num);
 extern int isWin(int *moves);
 extern int isReset(player **players, int *moves, int *num_moves, int *player_num);
 extern int menu();
@@ -12,7 +11,6 @@ extern void resetGame(player **players, int *moves, int *num_moves, int *player_
 extern void drawBoard(player **players, int num_moves, int *moves);
 extern void set_players(player **players);
 extern int reset();
-extern void free_players();
 
 int main (int argc, char **argv) {
 	player **players;
@@ -22,13 +20,8 @@ int main (int argc, char **argv) {
 	int moves[9]; //-1 for empty slot, 0 for player1 and 1 for player2
 
 	printf("Hello World\n");
-
-	if ((players = malloc(sizeof(player*) * 2)) == NULL) {
-		perror("malloc");
-		return(1);
-	}
 	
-	if (initGame(players, moves, &num_moves, &player_num) != 0) {
+	if (!(players = initGame(moves, &num_moves, &player_num))) {
 		goto terminate;
 	}
 

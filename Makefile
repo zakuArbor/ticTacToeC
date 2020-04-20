@@ -3,7 +3,11 @@ CFLAGS = -Wall
 DEPS = game.h
 OBJ = game_cli.o game.o
 
-all: game-server game-client game-socketless-client
+all: socket socketless
+
+socket: game-server game-client
+
+socketless: game-socketless
 
 game-server: game-server.o game.o
 	$(CC) -o $@ $^ -fsanitize=address
@@ -11,7 +15,7 @@ game-server: game-server.o game.o
 game-client: game-client.o game.o
 	$(CC) -o $@ $^ -fsanitize=address
 
-game-socketless-client: game-socketless.o game.o
+game-socketless: game-socketless.o game.o
 	$(CC) -o $@ $^ -fsanitize=address
 
 game-server.o: game-server.c socket.h game.o
