@@ -1,5 +1,7 @@
 #ifndef GAME_H
 
+#define GAME_H
+
 typedef int bool;
 #define true 1
 #define false 0
@@ -9,7 +11,12 @@ typedef struct
 	char name[10];
 	char piece; //either x or o
 	int isHuman; //true(1) for human player, false(0) for computer player
+
+	#ifdef SOCKET_V
 	int fd;
+	char buf[1024];
+	int buf_len;
+	#endif
 } player;
 
 int isWin(int *moves);

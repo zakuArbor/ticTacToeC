@@ -164,12 +164,12 @@ void free_players(player **players) {
 * @return: a double pointer to an array of size 2 that contains the player information
 */
 player **initGame(int *moves, int *num_moves, int *player_num) {
-	player **players = NULL;
-	if ((players = malloc(sizeof(player*) * 2)) == NULL) {
+	player **players;
+	if (!(players = malloc(sizeof(player*) * 2))) {
 		perror("malloc");
 		return NULL;
 	}
-
+	
 	if (!(players[0] = malloc(sizeof(player)))) {
 		perror("malloc");
 		free_players(players);
@@ -186,6 +186,5 @@ player **initGame(int *moves, int *num_moves, int *player_num) {
 	players[1]->piece = 'o';
 	
 	resetGame(players, moves, num_moves, player_num);
-
 	return players;
 }
