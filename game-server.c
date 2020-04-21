@@ -1,14 +1,16 @@
-#include <arpa/inet.h>
 #include <ctype.h>
-#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
 #include <unistd.h>
 
-#include "game.h"
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+
 #include "socket.h"
+#include "game.h"
+
 
 extern void makeMove(player **players, int *num_moves, int *moves, int *player_num);
 extern void set_players(int index, player **players);
@@ -86,9 +88,47 @@ int read_from(int client_index, player **players, int player_1, int connections)
     return(0);
 }
 
+/*
+* Set-up the server
+*
+* @param sock_fd: to store the server's file descriptor
+* @param server: the socket information to set
+* @return: return non-zero if there is an issue
+*/
+int server_setup(int *sock_fd, struct sockaddr_in *server) {
+    *sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (*sock_fd < 0) {
+        perror("server: socket");
+        exit(1);
+    }
+
+    // Set information about the port (and IP) we want to be connected to.
+    server->sin_family = AF_INET;
+    server->sin_port = htons(PORT);
+    (server->sin_addr).s_addr = INADDR_ANY;
+    
+    //initialize to zero to avoid any possible issues
+    memset(&(server->sin_zero), 0, 8);
+
+    // Bind the selected port to the socket.
+    if (bind(*sock_fd, (struct sockaddr *)server, sizeof(*server)) < 0) {
+        perror("server: bind");
+        return 1;
+    }
+
+    if (listen(*sock_fd, MAX_BACKLOG) < 0) {
+        perror("server: listen");
+        return 1;
+    }
+}
+
 
 int main(void) {	
 	player **players;
+    struct sockaddr_in server;
+    int sock_fd = -1;
+    int max_fd;
+    fd_set all_fds, listen_fds;
 
 	int num_moves;
 	int player_num = -1; //default -1: no players in the game
@@ -98,50 +138,20 @@ int main(void) {
 							// 0 <= connections <= 2
 	int player_1 = -1; //keeps track who is the first player to choose their piece
 
-	int sock_fd = -1;
-
-	if (initGame(moves, &num_moves, &player_num) != 0) {
+	if (!(players = initGame(moves, &num_moves, &player_num))) {
 		return(1);
 	}
-
+    
     for (int index = 0; index < MAX_CONNECTIONS; index++) {
         players[index]->fd = -1;
         players[index]->isHuman = true;
     }
-
-    // Create the socket FD.
-    sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock_fd < 0) {
-        perror("server: socket");
-        exit(1);
-    }
-
-    // Set information about the port (and IP) we want to be connected to.
-    struct sockaddr_in server;
-    server.sin_family = AF_INET;
-    server.sin_port = htons(PORT);
-    server.sin_addr.s_addr = INADDR_ANY;
-
-    // This should always be zero. On some systems, it won't error if you
-    // forget, but on others, you'll get mysterious errors. So zero it.
-    memset(&server.sin_zero, 0, 8);
-
-    // Bind the selected port to the socket.
-    if (bind(sock_fd, (struct sockaddr *)&server, sizeof(server)) < 0) {
-        perror("server: bind");
+    
+    if (server_setup(&sock_fd, &server) != 0) {
         goto terminate;
     }
 
-    // Announce willingness to accept connections on this socket.
-    if (listen(sock_fd, MAX_BACKLOG) < 0) {
-        perror("server: listen");
-        goto terminate;
-    }
-
-    // The client accept - message accept loop. First, we prepare to listen to multiple
-    // file descriptors by initializing a set of file descriptors.
-    int max_fd = sock_fd;
-    fd_set all_fds, listen_fds;
+    max_fd = sock_fd;
     FD_ZERO(&all_fds);
     FD_SET(sock_fd, &all_fds);
 
