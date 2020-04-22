@@ -14,7 +14,7 @@ typedef struct
 
 	#ifdef SOCKET_V
 	int fd;
-	char buf[1024];
+	char *buf;
 	int buf_len;
 	#endif
 } player;

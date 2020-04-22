@@ -22,16 +22,19 @@
 *	-1: error in read or no bytes read
 */
 int read_socket(int fd, char **buf, int *buf_len) {
-	printf("%d - in read socket: %d\n", fd, *buf_len);
+	int bytes_read = 0;
+	if (fd < 0 || !buf) {
+		return -1;
+	}
+
+	
 	if (*buf_len > BUF_SIZE) {
 		return 1;
 	}
 	else if (*buf_len < 0) { //should never happen
 		*buf_len = 0;
 	}
-	printf("position: %p\n", *buf + *buf_len);
-	int bytes_read = 0;
-	char temp[1024];
+	
 	if ((bytes_read = read(fd, *buf + *buf_len, BUF_SIZE - *buf_len)) < 0) {
 		perror("read");
 		return -1;
@@ -52,7 +55,6 @@ int read_socket(int fd, char **buf, int *buf_len) {
 	if ((*buf)[*buf_len - 2] == '\r' && (*buf)[*buf_len -1] == '\n') {
 		(*buf)[*buf_len -2] = '\0';
 		*buf_len -= 2;
-		printf("read: %s\n", *buf);
 		return 0;
 	}
 	return 1;
@@ -67,5 +69,20 @@ int read_socket(int fd, char **buf, int *buf_len) {
 * @return: 0 iff there is nothing wrong else return 1
 */
 int write_socket(int fd, char *buf, int buf_len) {
+	int bytes_written = 0;
+
+	if (fd < 0 || !buf || buf_len < 0) {
+		return 1;
+	}
+
+	if (buf_len > BUF_SIZE) { //should never occur
+		buf_len = BUF_SIZE;
+	}
+
+	if ((bytes_written = write(fd, buf, buf_len)) < buf_len) {
+		perror("write");
+		return 1;
+	} 
+
 	return 0;
 }

@@ -50,6 +50,7 @@ int accept_connection(int fd, player **players) {
     }
 
     players[player_index]->fd = client_fd;
+    printf("accepted connection: %d\n", client_fd);
 
     return client_fd;
 }
@@ -141,11 +142,7 @@ int main(void) {
 	if (!(players = initGame(moves, &num_moves, &player_num))) {
 		return(1);
 	}
-    
-    for (int index = 0; index < MAX_CONNECTIONS; index++) {
-        players[index]->fd = -1;
-        players[index]->isHuman = true;
-    }
+
     
     if (server_setup(&sock_fd, &server) != 0) {
         goto terminate;
@@ -173,14 +170,13 @@ int main(void) {
             FD_SET(client_fd, &all_fds);
         }
 
-        // Next, check the clients.
-        // NOTE: We could do some tricks with nready to terminate this loop early.
         for (int index = 0; index < MAX_CONNECTIONS; index++) {
             if (players[index]->fd > -1 && FD_ISSET(players[index]->fd, &listen_fds)) {
-                // Note: never reduces max_fd
-                int client_closed = read_from(index, players, player_1, connections);
-                if (client_closed > 0) {
-                    FD_CLR(client_closed, &all_fds);
+                //int client_closed = read_from(index, players, player_1, connections);
+                printf("send: %p\n", players[index]->buf);
+                int client_closed = read_socket(players[index]->fd, &(players[index]->buf), &(players[index]->buf_len));
+                if (client_closed < 0) {
+                    FD_CLR(players[index]->fd, &all_fds);
                     printf("Client %d disconnected\n", client_closed);
                 } else {
                     printf("Echoing message from client %d\n", players[index]->fd);

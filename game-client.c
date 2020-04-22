@@ -6,13 +6,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include "socket.h"
 #include "game.h"
 
-
-#ifndef PORT
-  #define PORT 30000
-#endif
-#define BUF_SIZE 128
 
 /*
 * Display menu and return:
@@ -87,18 +83,25 @@ int main(void) {
             exit(1);
         }
         if (FD_ISSET(fileno(stdin), &fdset)) {
-            num_read = read(STDIN_FILENO, buf, BUF_SIZE);
+            num_read = read(STDIN_FILENO, buf, BUF_SIZE - 2);
             if (num_read == 0) {
                 break;
             }
-            buf[num_read] = '\0';         // Just because I'm paranoid
+            if (buf[num_read-1] == '\n') {
+                num_read -=1;
+            }
+            buf[num_read] = '\r';
+            buf[num_read + 1] = '\n';
+            num_read +=2;
 
+            write_socket(sock_fd, buf, num_read);
+            /*
             int num_written = write(sock_fd, buf, num_read);
             if (num_written != num_read) {
                 perror("client: write");
                 close(sock_fd);
                 exit(1);
-            }
+            }*/
         }
         if (FD_ISSET(sock_fd, &fdset)) {
             num_read = read(sock_fd, buf, BUF_SIZE);

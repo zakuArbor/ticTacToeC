@@ -149,6 +149,11 @@ void free_players(player **players) {
 	}
 	for(int i = 0; i < 2; i++) {
 		if (players[i]) {
+			#ifdef SOCKET_V
+			if (players[i]->buf) {
+				free(players[i]->buf);
+			}
+			#endif
 			free(players[i]);
 		}
 	}
@@ -184,6 +189,18 @@ player **initGame(int *moves, int *num_moves, int *player_num) {
 
 	players[0]->piece = 'x';
 	players[1]->piece = 'o';
+
+	#ifdef SOCKET_V
+	for (int index = 0; index < 2; index++) {
+        players[index]->fd = -1;
+        players[index]->isHuman = true;
+        if (!((players[index])->buf = malloc(sizeof(char) * 1024))) {
+            free_players(players);
+        }
+        printf("buf: %p\n", players[index]->buf);
+        players[index]->buf_len = 0;
+    }
+    #endif
 	
 	resetGame(players, moves, num_moves, player_num);
 	return players;
