@@ -180,6 +180,7 @@ int main(void) {
                     printf("Client %d disconnected\n", client_closed);
                 } else {
                     printf("Echoing message from client %d\n", players[index]->fd);
+                    broadcast_socket(players[index]->buf, players[index]->buf_len, (void **)players, 2, PLAYER);
                 }
             }
         }

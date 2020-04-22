@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 
 #include "socket.h"
+#include "game.h"
 
 /*
 * Read from socket and store to buffer
@@ -85,4 +86,33 @@ int write_socket(int fd, char *buf, int buf_len) {
 	} 
 
 	return 0;
+}
+
+/*
+* Broadcast to all clients
+*
+* @param buf: the buffer to send
+* @param buf_len: the length of the buffer to send
+* @param clients: client array which must contain a fd member
+* @param clients_len: the length of the clients array
+* @param type: the data type of the clients array
+* @return: return non-zero on failure
+*/
+int broadcast_socket(char *buf, int buf_len, void **clients, int clients_len, enum client_type_t client_type) {
+	int status = 0;
+
+	if (!buf || buf_len < 0 || !clients) {
+		return 1;
+	}
+
+	for (int i = 0; i < clients_len; i++) {
+		int fd;
+		if (client_type == PLAYER) {
+			fd = (((player **) clients)[i])->fd;
+			if (write_socket(fd, buf, buf_len) != 0) {
+				status = 1;
+			}
+		}
+	}
+	return status;
 }

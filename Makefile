@@ -10,10 +10,10 @@ sockets: game-server game-client
 
 socketless: game-socketless
 
-game-server: game-server.c socket.c game.c
+game-server: game-server.c game.c socket.c
 	$(CC) -o $@ $(SOCKET_MACRO) $^ -fsanitize=address
 
-game-client: game-client.c socket.c game.c
+game-client: game-client.c game.c socket.c 
 	$(CC) -o $@ $(SOCKET_MACRO) $^ -fsanitize=address
 
 game-socketless: game-socketless.c game.c
