@@ -197,7 +197,6 @@ player **initGame(int *moves, int *num_moves, int *player_num) {
         if (!((players[index])->buf = malloc(sizeof(char) * 1024))) {
             free_players(players);
         }
-        printf("buf: %p\n", players[index]->buf);
         players[index]->buf_len = 0;
     }
     #endif

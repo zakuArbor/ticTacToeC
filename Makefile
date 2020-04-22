@@ -23,4 +23,4 @@ game-socketless: game-socketless.c game.c
 	gcc ${CFLAGS} -c $<
 
 clean:
-	rm *.o game-server game-client game-socketless
+	rm game-server game-client game-socketless

@@ -3,7 +3,7 @@
 #define SOCKET_H
 
 #ifndef PORT
-  #define PORT 30002
+  #define PORT 30001
 #endif
 #define BUF_SIZE 1024
 

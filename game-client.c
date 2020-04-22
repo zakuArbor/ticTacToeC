@@ -39,6 +39,12 @@ void makeMove(player **players, int *num_moves, int *moves, int *player_num) {
 
 
 int main(void) { 
+    char *buf;
+
+    if (!(buf = (char *)malloc(sizeof(char) * 1024))) {
+        return 1;
+    }
+
     // Create the socket FD.
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd < 0) {
@@ -66,10 +72,6 @@ int main(void) {
         printf("Connected to game server\n");
         fflush(stdout);
     }    
-    // Read input from the user, send it to the server, and then accept the
-    // echo that returns. Exit when stdin is closed.
-    char buf[BUF_SIZE + 1];
-    
 
     fd_set fdset;
     FD_ZERO(&fdset);
@@ -95,24 +97,21 @@ int main(void) {
             num_read +=2;
 
             write_socket(sock_fd, buf, num_read);
-            /*
-            int num_written = write(sock_fd, buf, num_read);
-            if (num_written != num_read) {
-                perror("client: write");
-                close(sock_fd);
-                exit(1);
-            }*/
         }
+
         if (FD_ISSET(sock_fd, &fdset)) {
-            num_read = read(sock_fd, buf, BUF_SIZE);
-            if (num_read == 0) {
+            num_read = 0;
+            int client_closed = read_socket(sock_fd, &buf, &num_read);
+            if (client_closed < 0) {
                 break;
+            } else {
+                printf("Echoing message from server\n");
+                printf("%s\n", buf);
             }
-            buf[num_read] = '\0';
-            printf("%s\n", buf);
         } 
     }
 
     close(sock_fd);
+    free(buf);
     return 0;
 }

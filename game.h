@@ -19,6 +19,8 @@ typedef struct
 	#endif
 } player;
 
+enum game_state_t { START_STATE, PLAYER_STATE, GAME_STATE, END_STATE };
+
 int isWin(int *moves);
 void resetGame(player **players, int *moves, int *num_moves, int *player_num);
 void makeMove(player **players, int *num_moves, int *moves, int *player_num);

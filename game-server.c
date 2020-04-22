@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <arpa/inet.h>
@@ -13,7 +14,7 @@
 
 
 extern void makeMove(player **players, int *num_moves, int *moves, int *player_num);
-extern void set_players(int index, player **players);
+extern void set_players(player **players);
 
 int get_index(player **players) {
 	int player_index = 0;
@@ -130,14 +131,16 @@ int main(void) {
     int sock_fd = -1;
     int max_fd;
     fd_set all_fds, listen_fds;
+    char buf[BUF_SIZE];
 
 	int num_moves;
-	int player_num = -1; //default -1: no players in the game
+	int player_num = -1;    //default -1: no players in the game
 	int quit = 0;
-	int moves[9]; //-1 for empty slot, 0 for player1 and 1 for player2
-	int connections = 0;	//keeps track of number of people connected to the server
-							// 0 <= connections <= 2
-	int player_1 = -1; //keeps track who is the first player to choose their piece
+	int moves[9];           //-1 for empty slot, 0 for player1 and 1 for player2
+	int connections = 0;    //keeps track of number of people connected to the server
+                            // 0 <= connections <= 2
+	int player_1 = -1;      //keeps track who is the first player to choose their piece
+    int state = START_STATE;//the state of the game
 
 	if (!(players = initGame(moves, &num_moves, &player_num))) {
 		return(1);
@@ -153,6 +156,20 @@ int main(void) {
     FD_SET(sock_fd, &all_fds);
 
     while (1) {
+        if (state == PLAYER_STATE) {
+            set_players(players);
+            state = GAME_STATE;
+
+            int first_player_index = 0;
+
+            if (players[0]->piece != 'x') {
+                first_player_index = 1;
+            }
+
+            snprintf(buf, 22, "Player %d goes first\n", players[first_player_index]->fd);
+            broadcast_socket(buf, 22, (void **)players, 2, PLAYER);
+        }
+        
         // select updates the fd_set it receives, so we always use a copy and retain the original.
         listen_fds = all_fds;
         int nready = select(max_fd + 1, &listen_fds, NULL, NULL, NULL);
@@ -164,10 +181,19 @@ int main(void) {
         // Is it the original socket? Create a new connection ...
         if (FD_ISSET(sock_fd, &listen_fds)) {
             int client_fd = accept_connection(sock_fd, players);
+
             if (client_fd > max_fd) {
                 max_fd = client_fd;
             }
-            FD_SET(client_fd, &all_fds);
+            if (client_fd > 0) {
+                FD_SET(client_fd, &all_fds);
+                snprintf(buf, 31, "Player %d has entered the room\n", client_fd); //29 chars
+                broadcast_socket(buf, 31, (void **)players, 2, PLAYER);
+                connections++;
+                if (connections >= 2) {
+                    state = PLAYER_STATE;
+                }
+            }
         }
 
         for (int index = 0; index < MAX_CONNECTIONS; index++) {
@@ -178,6 +204,7 @@ int main(void) {
                 if (client_closed < 0) {
                     FD_CLR(players[index]->fd, &all_fds);
                     printf("Client %d disconnected\n", client_closed);
+                    connections--;
                 } else {
                     printf("Echoing message from client %d\n", players[index]->fd);
                     broadcast_socket(players[index]->buf, players[index]->buf_len, (void **)players, 2, PLAYER);
@@ -219,4 +246,23 @@ void makeMove(player **players, int *num_moves, int *moves, int *player_num) {
 	if (move >= 0 && move < 9 && moves[move] == -1) {
 		write_move(num_moves, moves, player_num, move);
 	}
+}
+
+/*
+* Set players to their respective role based on game option
+*
+* Player 1 goes first iff random number is even
+*
+* @param players: an array of 2 player struct
+*/
+void set_players(player **players) {
+    srand(time(0));
+    if (rand() % 100 == 0) {
+        players[0]->piece = 'x';
+        players[1]->piece = 'y';
+    } 
+    else {
+        players[0]->piece = 'y';
+        players[1]->piece = 'x';        
+    }
 }
