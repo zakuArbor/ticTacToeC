@@ -116,3 +116,102 @@ int broadcast_socket(char *buf, int buf_len, void **clients, int clients_len, en
 	}
 	return status;
 }
+
+/*
+* Parse message (called a packet) sent either by the server or player
+*
+* @param buf: the buffer to parse
+* @param buf_len: the length of the buffer to parse
+* @param pkt: the packet that is sent (contains the message and the user)
+* @return: a non-zero if an error occurs
+*/
+int parse_packet(char *buf, int buf_len, message_t *pkt) {
+	if (!buf || !pkt || buf_len <= 0) {
+		return 1;
+	}
+	if (buf_len > BUF_SIZE) {
+		buf_len = BUF_SIZE;
+	}
+
+	/*
+	* STATES:
+	* 0 - get message type
+	* 2 - get username
+	* 4 - get message till "\r\n"
+	*/
+	int state = 0;
+	int name_len = 0, msg_len = 0, start_index;
+	char temp_buf[BUF_SIZE];
+
+	for(int i = 0; i < buf_len; i++) {
+		switch(state) {
+			case 0:
+				if (isdigit(buf[i]) == 0) {
+					return 1;
+				}
+				pkt->msg_type = buf[i] - '0';
+				state = 1;
+				break;
+			case 1:
+				if (buf[i] == ' ') {
+					state++;
+					start_index = i + 1;
+				}
+				break;
+			case 2:
+				if (buf[i] == ' ' || name_len >= USERNAME_SIZE) {
+					state = 3;
+					
+					strncpy(pkt->username, buf+start_index, name_len);
+					pkt->username[name_len] = '\0';
+					start_index = i + 1;
+				}
+				else if (name_len < USERNAME_SIZE - 1) { 
+					name_len++;
+				}
+				break;
+			case 3:
+				//msg_type(1B) + ' '(1B) + username(name_len B) + ' '(1B)
+				if (buf[i] != '\r' && msg_len < MSG_SIZE - 1 - 1 - name_len - 1) {
+					msg_len++;
+				}
+				else {
+					strncpy(pkt->msg, buf+start_index, msg_len);
+					pkt->msg[msg_len] = '\0';
+					return 0;
+				}
+				break;
+		}
+	}
+	return 1;
+}
+
+/*
+* Create a message to send following the protocol stated under protocol.md
+*
+* @param buf: the message to send
+* @param buf_len: the length of the buffer to send
+* @param username: the username who is sending the message
+* @param msg_type: the type of message to send
+* @param send_buf: the message that will store the formatted message to send 
+* @return: a non-zero if an error occurs
+*/
+int format_packet_string(char *buf, int buf_len, char *username, int msg_type, char **send_buf) {
+	printf("in format string\n");
+	if (!username || strlen(username) >= USERNAME_SIZE || !buf || buf <= 0 || !send_buf) {
+		printf("should not be in here\n");
+		return 1;
+	}
+	if (buf_len > MSG_SIZE) {
+		buf_len = MSG_SIZE;
+	}
+	printf("start\n");
+
+	snprintf(*send_buf, 3, "%d ", msg_type);
+	strncat(*send_buf, username, strlen(username));
+	strncat(*send_buf, " ", 2);
+	strncat(*send_buf, buf, buf_len);
+	strncat(*send_buf, "\r\n", 3);
+	printf("to send: %s\n", *send_buf);
+	return 0;
+}

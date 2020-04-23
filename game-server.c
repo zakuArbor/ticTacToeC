@@ -132,6 +132,7 @@ int main(void) {
     int max_fd;
     fd_set all_fds, listen_fds;
     char buf[BUF_SIZE];
+    message_t pkt;
 
 	int num_moves;
 	int player_num = -1;    //default -1: no players in the game
@@ -167,9 +168,10 @@ int main(void) {
             }
 
             snprintf(buf, 22, "Player %d goes first\n", players[first_player_index]->fd);
+            printf("indicate player first\n");
             broadcast_socket(buf, 22, (void **)players, 2, PLAYER);
         }
-        
+
         // select updates the fd_set it receives, so we always use a copy and retain the original.
         listen_fds = all_fds;
         int nready = select(max_fd + 1, &listen_fds, NULL, NULL, NULL);
@@ -207,6 +209,7 @@ int main(void) {
                     connections--;
                 } else {
                     printf("Echoing message from client %d\n", players[index]->fd);
+                    parse_packet(players[index]->buf, players[index]->buf_len, &pkt);
                     broadcast_socket(players[index]->buf, players[index]->buf_len, (void **)players, 2, PLAYER);
                 }
             }

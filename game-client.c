@@ -40,8 +40,13 @@ void makeMove(player **players, int *num_moves, int *moves, int *player_num) {
 
 int main(void) { 
     char *buf;
+    char *send_buf;
 
     if (!(buf = (char *)malloc(sizeof(char) * 1024))) {
+        return 1;
+    }
+
+    if (!(send_buf = (char *)malloc(sizeof(char) * PKT_STR_SIZE))) {
         return 1;
     }
 
@@ -96,7 +101,8 @@ int main(void) {
             buf[num_read + 1] = '\n';
             num_read +=2;
 
-            write_socket(sock_fd, buf, num_read);
+            format_packet_string(buf, num_read, "Player1", PLAYER_MESSAGE, &send_buf);
+            write_socket(sock_fd, send_buf, strlen(send_buf));
         }
 
         if (FD_ISSET(sock_fd, &fdset)) {
@@ -112,6 +118,11 @@ int main(void) {
     }
 
     close(sock_fd);
-    free(buf);
+    if (buf) {
+        free(buf);
+    }
+    if (send_buf) {
+        free(send_buf);
+    }
     return 0;
 }
