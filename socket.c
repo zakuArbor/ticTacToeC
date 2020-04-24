@@ -187,30 +187,52 @@ int parse_packet(char *buf, int buf_len, message_t *pkt) {
 }
 
 /*
-* Create a message to send following the protocol stated under protocol.md
+* Format paramters to a packet
 *
 * @param buf: the message to send
 * @param buf_len: the length of the buffer to send
 * @param username: the username who is sending the message
 * @param msg_type: the type of message to send
-* @param send_buf: the message that will store the formatted message to send 
+* @param pkt: the packet to store all the parameters
 * @return: a non-zero if an error occurs
 */
-int format_packet_string(char *buf, int buf_len, char *username, int msg_type, char **send_buf) {
-	printf("in format string\n");
-	if (!username || strlen(username) >= USERNAME_SIZE || !buf || buf <= 0 || !send_buf) {
-		printf("should not be in here\n");
+int format_packet(char *buf, int buf_len, char *username, int msg_type, message_t *pkt) {
+	printf("on format packet\n");
+	if (!username || strlen(username) >= USERNAME_SIZE || !buf || buf_len <= 0 || !pkt) {	
 		return 1;
 	}
 	if (buf_len > MSG_SIZE) {
 		buf_len = MSG_SIZE;
 	}
-	printf("start\n");
+	
+	pkt->msg_type = msg_type;
 
-	snprintf(*send_buf, 3, "%d ", msg_type);
-	strncat(*send_buf, username, strlen(username));
+	strncpy(pkt->username, username, strlen(username));
+	pkt->username[strlen(username)] = '\0';
+
+	strncpy(pkt->msg, buf, buf_len);
+	pkt->msg[buf_len] = '\0';
+	printf("packet format completed\n");
+	return 0;
+}
+
+/*
+* Create a message to send following the protocol stated under protocol.md
+*
+* @param pkt: contains all the information we wish to send (i.e. username, msg_type, and the message itself)
+* @param send_buf: the message that will store the formatted message to send 
+* @return: a non-zero if an error occurs
+*/
+int packet_to_string(message_t *pkt, char **send_buf) {
+	if (!send_buf || !pkt) {
+		printf("should not be in here\n");
+		return 1;
+	}
+
+	snprintf(*send_buf, 3, "%d ", pkt->msg_type);
+	strncat(*send_buf, pkt->username, strlen(pkt->username));
 	strncat(*send_buf, " ", 2);
-	strncat(*send_buf, buf, buf_len);
+	strncat(*send_buf, pkt->msg, strlen(pkt->msg));
 	strncat(*send_buf, "\r\n", 3);
 	printf("to send: %s\n", *send_buf);
 	return 0;

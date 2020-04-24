@@ -41,6 +41,7 @@ void makeMove(player **players, int *num_moves, int *moves, int *player_num) {
 int main(void) { 
     char *buf;
     char *send_buf;
+    message_t pkt;
 
     if (!(buf = (char *)malloc(sizeof(char) * 1024))) {
         return 1;
@@ -101,7 +102,9 @@ int main(void) {
             buf[num_read + 1] = '\n';
             num_read +=2;
 
-            format_packet_string(buf, num_read, "Player1", PLAYER_MESSAGE, &send_buf);
+            
+            format_packet(buf, strlen(buf), "Player1", PLAYER_ACTION, &pkt);
+            packet_to_string(&pkt, &send_buf);
             write_socket(sock_fd, send_buf, strlen(send_buf));
         }
 
