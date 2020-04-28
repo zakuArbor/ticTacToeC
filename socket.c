@@ -172,14 +172,8 @@ int parse_packet(char *buf, int buf_len, message_t *pkt) {
 				break;
 			case 3:
 				//msg_type(1B) + ' '(1B) + username(name_len B) + ' '(1B)
-				if (buf[i] != '\r' && msg_len < MSG_SIZE - 1 - 1 - name_len - 1) {
-					msg_len++;
-				}
-				else {
-					strncpy(pkt->msg, buf+start_index, msg_len);
-					pkt->msg[msg_len] = '\0';
-					return 0;
-				}
+				strncpy(pkt->msg, buf+start_index, buf_len - start_index);
+				return 0;
 				break;
 		}
 	}
@@ -197,7 +191,6 @@ int parse_packet(char *buf, int buf_len, message_t *pkt) {
 * @return: a non-zero if an error occurs
 */
 int format_packet(char *buf, int buf_len, char *username, int msg_type, message_t *pkt) {
-	printf("on format packet\n");
 	if (!username || strlen(username) >= USERNAME_SIZE || !buf || buf_len <= 0 || !pkt) {	
 		return 1;
 	}
@@ -212,7 +205,6 @@ int format_packet(char *buf, int buf_len, char *username, int msg_type, message_
 
 	strncpy(pkt->msg, buf, buf_len);
 	pkt->msg[buf_len] = '\0';
-	printf("packet format completed\n");
 	return 0;
 }
 

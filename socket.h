@@ -5,7 +5,7 @@
 #define SOCKET_H
 
 #ifndef PORT
-  #define PORT 30002
+  #define PORT 30001
 #endif
 #define BUF_SIZE 1024
 #define MSG_SIZE 500
@@ -27,9 +27,12 @@ enum client_type_t {
 
 enum message_type_t {
 	GAME_MESSAGE,
+	GAME_CONTROL,
 	PLAYER_ACTION,
 	PLAYER_MESSAGE
 };
+
+#define ASSIGN_CONTROL "assign"
 
 int read_socket(int fd, char **buf, int *buf_len);
 int write_socket(int fd, char *buf, int buf_len);
