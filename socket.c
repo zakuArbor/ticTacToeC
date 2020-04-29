@@ -12,6 +12,37 @@
 #include "game.h"
 
 /*
+* Return the index of the first occurance of "\r\n" stored in the buffer. Else return -1
+*/
+int find_network_newline(char **buf, int buf_len) {
+	//find the first occurance of \r\n
+	for (int i = 0; i < buf_len; i++) {
+		if (i + 1 < buf_len && (*buf)[i] == '\r' && (*buf)[i + 1] == '\n') {
+			return i;
+		}		
+	}
+	return -1;
+}
+
+void strip_network_newline(char *buf, int buf_len) {
+	if (buf[buf_len-2] == '\r') {
+		buf[buf_len-2] = '\0';
+	}
+}
+
+void print(char *buf, int buf_len) {
+	for(int i = 0; i < buf_len; i++) {
+		if (buf[i] == '\r' || buf[i] == '\n') {
+			printf("*");
+		}
+		else {
+			printf("|%c|", buf[i]);
+		}
+	}
+	printf("\n");
+}
+
+/*
 * Read from socket and store to buffer
 *
 * @param fd: file descriptor to read from
@@ -23,6 +54,10 @@
 *	-1: error in read or no bytes read
 */
 int read_socket(int fd, char **buf, int *buf_len) {
+	printf("on read socket\n");
+	printf("before buf_len: %d\n", *buf_len);
+
+
 	int bytes_read = 0;
 	if (fd < 0 || !buf) {
 		return -1;
@@ -48,16 +83,12 @@ int read_socket(int fd, char **buf, int *buf_len) {
 
 	printf("bytes_read: %d\n", bytes_read);
 
-	for (int i = 0; i < *buf_len; i++) {
-		printf("|%c|\n", (*buf)[i]);
-		
-	}
+	print(*buf, *buf_len);
 
-	if ((*buf)[*buf_len - 2] == '\r' && (*buf)[*buf_len -1] == '\n') {
-		(*buf)[*buf_len -2] = '\0';
-		*buf_len -= 2;
+	if ((*buf)[*buf_len-2] == '\r' && (*buf)[*buf_len - 1] == '\n') {
 		return 0;
 	}
+
 	return 1;
 }
 
@@ -120,18 +151,22 @@ int broadcast_socket(char *buf, int buf_len, void **clients, int clients_len, en
 /*
 * Parse message (called a packet) sent either by the server or player
 *
+* NOTE: Buffer gets shifted after being parsed to anything after the network newline
+*
 * @param buf: the buffer to parse
 * @param buf_len: the length of the buffer to parse
 * @param pkt: the packet that is sent (contains the message and the user)
 * @return: a non-zero if an error occurs
 */
-int parse_packet(char *buf, int buf_len, message_t *pkt) {
+int parse_packet(char **buf, int *buf_len, message_t *pkt) {
 	if (!buf || !pkt || buf_len <= 0) {
 		return 1;
 	}
-	if (buf_len > BUF_SIZE) {
-		buf_len = BUF_SIZE;
+	if (*buf_len > BUF_SIZE) {
+		*buf_len = BUF_SIZE;
 	}
+
+	printf("parsing message\n");
 
 	/*
 	* STATES:
@@ -143,26 +178,27 @@ int parse_packet(char *buf, int buf_len, message_t *pkt) {
 	int name_len = 0, msg_len = 0, start_index;
 	char temp_buf[BUF_SIZE];
 
-	for(int i = 0; i < buf_len; i++) {
+	for(int i = 0; i < *buf_len; i++) {
+		//printf("state: %d\n", state);
 		switch(state) {
 			case 0:
-				if (isdigit(buf[i]) == 0) {
+				if (isdigit((*buf)[i]) == 0) {
 					return 1;
 				}
-				pkt->msg_type = buf[i] - '0';
+				pkt->msg_type = (*buf)[i] - '0';
 				state = 1;
 				break;
 			case 1:
-				if (buf[i] == ' ') {
+				if ((*buf)[i] == ' ') {
 					state++;
 					start_index = i + 1;
 				}
 				break;
 			case 2:
-				if (buf[i] == ' ' || name_len >= USERNAME_SIZE) {
+				if ((*buf)[i] == ' ' || name_len >= USERNAME_SIZE) {
 					state = 3;
 					
-					strncpy(pkt->username, buf+start_index, name_len);
+					strncpy(pkt->username, *buf+start_index, name_len);
 					pkt->username[name_len] = '\0';
 					start_index = i + 1;
 				}
@@ -172,8 +208,26 @@ int parse_packet(char *buf, int buf_len, message_t *pkt) {
 				break;
 			case 3:
 				//msg_type(1B) + ' '(1B) + username(name_len B) + ' '(1B)
-				strncpy(pkt->msg, buf+start_index, buf_len - start_index);
-				return 0;
+				printf("msg: |%c| ", (*buf)[i]);
+				if ((*buf)[i] != '\r' && msg_len < MSG_SIZE - 1 - 1 - name_len - 1) {
+					msg_len++;
+				}
+				else {
+					strncpy(pkt->msg, *buf+start_index, msg_len);
+					pkt->msg[msg_len] = '\0';
+
+					//buf + start_index + msg_len + 2(network newline)
+					printf("before\n");
+					print(*buf, *buf_len);
+					int offset = start_index + msg_len + 2;
+					(*buf_len) -= offset;
+					memmove((*buf), *buf+offset, *buf_len);
+					printf("\t new buf len: %d\n", *buf_len);
+					printf("\t new buf: ");
+					print(*buf, *buf_len);
+					
+					return 0;
+				}
 				break;
 		}
 	}
@@ -191,6 +245,7 @@ int parse_packet(char *buf, int buf_len, message_t *pkt) {
 * @return: a non-zero if an error occurs
 */
 int format_packet(char *buf, int buf_len, char *username, int msg_type, message_t *pkt) {
+	printf("on format packet\n");
 	if (!username || strlen(username) >= USERNAME_SIZE || !buf || buf_len <= 0 || !pkt) {	
 		return 1;
 	}
@@ -205,6 +260,7 @@ int format_packet(char *buf, int buf_len, char *username, int msg_type, message_
 
 	strncpy(pkt->msg, buf, buf_len);
 	pkt->msg[buf_len] = '\0';
+	printf("packet format completed\n");
 	return 0;
 }
 
@@ -226,6 +282,7 @@ int packet_to_string(message_t *pkt, char **send_buf) {
 	strncat(*send_buf, " ", 2);
 	strncat(*send_buf, pkt->msg, strlen(pkt->msg));
 	strncat(*send_buf, "\r\n", 3);
-	printf("to send: %s\n", *send_buf);
+	//printf("to send: %s\n", *send_buf);
+	print(*send_buf, strlen(*send_buf));
 	return 0;
 }

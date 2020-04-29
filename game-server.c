@@ -11,9 +11,7 @@
 
 #include "socket.h"
 #include "game.h"
-
-
-#define ADMIN_USERNAME "admin"
+#include "game_socket.h"
 
 extern int move_player(player **players, int *num_moves, int *moves, int *player_num, char *move_str);
 extern void set_players(player **players, int *num_moves, int*moves, int *player_num);
@@ -180,15 +178,28 @@ int main(void) {
             }
 
             snprintf(buf, 22, "Player %d goes first\n", players[player_num]->fd);
+            char username[USERNAME_SIZE];
+            strncpy(username, ADMIN_USERNAME, strlen(ADMIN_USERNAME));
+            username[strlen(ADMIN_USERNAME)] = '\0';
+
+
+            format_packet(buf, strlen(buf), username, GAME_MESSAGE, &pkt);
+            packet_to_string(&pkt, &send_buf);
             
-            strncpy(pkt.username, ADMIN_USERNAME, strlen(ADMIN_USERNAME));
-            pkt.username[strlen(ADMIN_USERNAME)] = '\0';
-
-
-            //packet_to_string(buf, 22, ADMIN_USERNAME, GAME_MESSAGE, &send_buf);
-
             printf("indicate player first\n");
-            broadcast_socket(send_buf, strlen(send_buf), (void **)players, 2, PLAYER);
+               
+
+            char username_assign[2];
+            snprintf(username_assign, 2, "%d", player_num);
+            printf("username assign: %s\n", username_assign);
+            strncpy(buf, ASSIGN_CONTROL, strlen(ASSIGN_CONTROL));
+            buf[strlen(ASSIGN_CONTROL)] = '\0';
+
+            format_packet(buf, strlen(buf), username_assign, GAME_CONTROL, &pkt);
+            packet_to_string(&pkt, &send_buf);
+            broadcast_socket(send_buf, strlen(send_buf), (void **)players, 2, PLAYER); 
+
+            notify_move(players, &pkt, &send_buf, username, player_num);
 
             state = GAME_STATE;
         }
@@ -211,10 +222,10 @@ int main(void) {
             if (client_fd > 0) {
                 FD_SET(client_fd, &all_fds);
                 char username[USERNAME_SIZE + 1];
-                snprintf(username, 9,"Player %d", client_fd);
+                snprintf(username, 9,"Player%d", client_fd);
                 snprintf(buf, strlen(username) + 23, "Player %d has entered the room\n", client_fd); //29 chars
-                printf("216\n");
-                format_packet(buf, strlen(buf), username, PLAYER_ACTION, &pkt);
+
+                format_packet(buf, strlen(buf), username, GAME_MESSAGE, &pkt);
                 packet_to_string(&pkt, &send_buf);
                 broadcast_socket(send_buf, strlen(send_buf), (void **)players, 2, PLAYER);
 
@@ -234,11 +245,11 @@ int main(void) {
                     FD_CLR(players[index]->fd, &all_fds);
                     printf("Client %d disconnected\n", client_closed);
                     connections--;
-                } else {
+                } else if (client_closed == 0) {
                     printf("Echoing message from client %d\n", players[index]->fd);
-                    parse_packet(players[index]->buf, players[index]->buf_len, &pkt);
+                    parse_packet(&(players[index]->buf), &(players[index]->buf_len), &pkt);
                     if (state == GAME_STATE) {
-                        packet_handler(&pkt, players[index]->buf, players, &num_moves, moves, &player_num);
+                        packet_handler(&pkt, &send_buf, players, &num_moves, moves, &player_num, players[index]->fd);
                     }
                     //broadcast_socket(players[index]->buf, players[index]->buf_len, (void **)players, 2, PLAYER);
                 }
@@ -264,27 +275,6 @@ terminate:
 }
 
 /*
-* Allow player to make a move
-*
-* @param players: an array of 2 player struct
-* @param num_moves: a reference to the number of moves that has been played
-* @param moves: a reference to a list of moves that has been made so far
-* @param player_num: a reference to a variable that keeps track whose turn it is
-* @param move_str: player's move stored in a string
-* @return: return a non-negative number (0-9) if move is valid
-*/
-int move_player(player **players, int *num_moves, int *moves, int *player_num, char *move_str) {
-	int move;
-    move = strtol(move_str, NULL, 10);
-
-	if (move >= 0 && move < 9 && moves[move] == -1) {
-		write_move(num_moves, moves, player_num, move);
-        return move;
-	}
-    return -1;
-}
-
-/*
 * Set players to their respective role based on game option
 *
 * Player 1 goes first iff random number is even
@@ -296,26 +286,11 @@ void set_players(player **players, int *num_moves, int*moves, int *player_num) {
     if (rand() % 100 == 0) {
         players[0]->piece = 'x';
         players[1]->piece = 'y';
+        *player_num = 0;
     } 
     else {
         players[0]->piece = 'y';
         players[1]->piece = 'x';        
+        *player_num = 1;
     }
-}
-
-int packet_handler(message_t *pkt, char *send_buf, player **players, int *num_moves, int*moves, int *player_num) {
-    char buf[BUF_SIZE];
-    switch(pkt->msg_type) {
-        case PLAYER_ACTION: 
-            if (move_player(players, moves, player_num, num_moves, pkt->msg)  >= 0) {
-                broadcast_socket(send_buf, strlen(send_buf), (void **)players, 2, PLAYER);
-            }
-            else {
-
-            }
-            break;
-        default:
-            return 1;
-    }
-    return 0;
 }

@@ -6,6 +6,8 @@ typedef int bool;
 #define true 1
 #define false 0
 
+#define ADMIN_USERNAME "admin"
+
 typedef struct 
 {
 	char name[10];
@@ -30,5 +32,6 @@ void ai_move(player **players, int *moves, int *player_num, int *num_moves);
 void player_move(player **players, int *moves, int *player_num, int *num_moves);
 player **initGame(int *moves, int *num_moves, int *player_num);
 void free_players(player **players);
+void drawBoard(player **players, int num_moves, int *moves);
 
 #endif

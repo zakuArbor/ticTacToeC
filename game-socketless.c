@@ -157,30 +157,4 @@ int reset() {
 	return(0);
 }
 
-/*
-* Draws the game board
-*
-* @param players: an array of 2 player struct
-* @param num_moves: number of moves that has been played
-* @param moves: a reference to a list of player's moves
-*/
-void drawBoard(player **players, int num_moves, int *moves) {
-	int row, col;
-	for (row = 0; row < 3; row++) {
-		for (col = 0; col < 5; col++) {
-			if (col % 2 == 0) { //a slot
-				if (num_moves > 0 && moves[(row*3) + (col/2)] != -1) { //if there is a piece placed
-					printf("%c", players[moves[(row*3) + (col/2)]]->piece);
-				}
-				else {
-					printf(" ");
-				}
-			} 
-			else { //a border
-					printf("|");
-			}
-		}
-		if (row < 2) printf("\n-----\n");
-	}
-	printf("\n\n");
-}
+

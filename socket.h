@@ -5,7 +5,7 @@
 #define SOCKET_H
 
 #ifndef PORT
-  #define PORT 30001
+  #define PORT 30000
 #endif
 #define BUF_SIZE 1024
 #define MSG_SIZE 500
@@ -37,8 +37,10 @@ enum message_type_t {
 int read_socket(int fd, char **buf, int *buf_len);
 int write_socket(int fd, char *buf, int buf_len);
 int broadcast_socket(char *buf, int buf_len, void **clients, int clients_len, enum client_type_t client_type);
-int parse_packet(char *buf, int buf_len, message_t *pkt);
+int parse_packet(char **buf, int *buf_len, message_t *pkt);
 int format_packet(char *buf, int buf_len, char *username, int msg_type, message_t *pkt);
 int packet_to_string(message_t *pkt, char **send_buf);
-int packet_handler(message_t *pkt, char *send_buf, player **players, int *num_moves, int*moves, int *player_num);
+int find_network_newline(char **buf, int buf_len);
+void strip_network_newline(char *buf, int buf_len);
+void print(char *buf, int buf_len);
 #endif
