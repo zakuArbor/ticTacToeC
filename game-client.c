@@ -69,7 +69,7 @@ int main(void) {
     int connections = 0;    //keeps track of number of people connected to the server
                             // 0 <= connections <= 2
     int player_1 = -1;      //keeps track who is the first player to choose their piece
-
+    int terminate = 0;
     int num_read = 0, buf_len = 0;
 
     if (!(players = initGame(moves, &num_moves, &player_num))) {
@@ -119,7 +119,7 @@ int main(void) {
     fd_set fdset;
     FD_ZERO(&fdset);
 
-    while (1) {
+    while (!terminate) {
         FD_SET(sock_fd, &fdset);
         FD_SET(fileno(stdin), &fdset);
         if (select(sock_fd + 1, &fdset, NULL, NULL, NULL) < 0) {
@@ -153,7 +153,10 @@ int main(void) {
                 while (find_network_newline(&buf, buf_len) != -1) {
                     parse_packet(&buf, &buf_len, &pkt);
                     printf("buf_len: %d\n", buf_len);
-                    packet_handler(&pkt, &send_buf, players, &num_moves, moves, &player_num, 0);
+                    if (packet_handler(&pkt, &send_buf, players, &num_moves, moves, &player_num, 0) == 1) {
+                        terminate = 1;
+                        break;
+                    }
 
                 }
             }
@@ -163,6 +166,9 @@ int main(void) {
     close(sock_fd);
     if (buf) {
         free(buf);
+    }
+    if (buf_stdin) {
+        free(buf_stdin);
     }
     if (send_buf) {
         free(send_buf);

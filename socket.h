@@ -5,7 +5,7 @@
 #define SOCKET_H
 
 #ifndef PORT
-  #define PORT 30000
+  #define PORT 30002
 #endif
 #define BUF_SIZE 1024
 #define MSG_SIZE 500
@@ -29,7 +29,8 @@ enum message_type_t {
 	GAME_MESSAGE,
 	GAME_CONTROL,
 	PLAYER_ACTION,
-	PLAYER_MESSAGE
+	PLAYER_MESSAGE,
+	GAME_TERMINATE
 };
 
 #define ASSIGN_CONTROL "assign"

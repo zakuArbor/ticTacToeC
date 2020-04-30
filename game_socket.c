@@ -37,6 +37,35 @@ void notify_move(player **players, message_t *pkt, char **send_buf, char *userna
     write_socket(players[player_num]->fd, *send_buf, strlen(*send_buf));
 }
 
+void set_terminate_pkt(message_t *pkt) {
+    strncpy(pkt->username, ADMIN_USERNAME, strlen(ADMIN_USERNAME));
+    pkt->username[strlen(ADMIN_USERNAME)] = '\0';
+    pkt->msg_type = GAME_TERMINATE;
+}
+
+void send_winner_loser_msg(player **players, message_t *pkt, char **send_buf, int winner) {
+    set_terminate_pkt(pkt);
+
+    snprintf(pkt->msg, 9, "You won!");
+    packet_to_string(pkt, send_buf);
+    packet_to_string(pkt, send_buf);
+    write_socket(players[winner]->fd, *send_buf, strlen(*send_buf));
+
+    snprintf(pkt->msg, 10, "You lose!");
+    packet_to_string(pkt, send_buf);
+    write_socket(players[winner^1]->fd, *send_buf, strlen(*send_buf));
+}
+
+void send_tied_msg(player **players, message_t *pkt, char **send_buf) {
+    set_terminate_pkt(pkt);
+    snprintf(pkt->msg, 10, "Game Tied");
+    packet_to_string(pkt, send_buf);
+    broadcast_socket(*send_buf, strlen(*send_buf), (void **)players, 2, PLAYER);
+}
+
+/*
+* Returns 1 to indicate termination of the program
+*/
 int packet_handler(message_t *pkt, char **send_buf, player **players, int *num_moves, int *moves, int *player_num, int fd) {
     char buf[BUF_SIZE];
     printf("on pkt handler: %d\n", pkt->msg_type);
@@ -71,13 +100,27 @@ int packet_handler(message_t *pkt, char **send_buf, player **players, int *num_m
                     strip_network_newline(pkt->msg, strlen(pkt->msg));
                     packet_to_string(pkt, send_buf);
                     broadcast_socket(*send_buf, strlen(*send_buf), (void **)players, 2, PLAYER);
-                    notify_move(players, pkt, send_buf, ADMIN_USERNAME, *player_num);
+                    if (*num_moves == 9 || isWin(moves) != -1) {
+                        if (isWin(moves) != -1) {
+                            send_winner_loser_msg(players, pkt, send_buf, isWin(moves));
+                        }
+                        else {
+                            send_tied_msg(players, pkt, send_buf);
+                        }
+                        return 1;
+                    }
+                    else {
+                        notify_move(players, pkt, send_buf, ADMIN_USERNAME, *player_num);
+                    }
                 #endif
                 drawBoard(players, *num_moves, moves);
             }
-            else {
-
-            }
+            break;
+        case GAME_TERMINATE:
+            #ifdef CLIENT_MACRO
+                printf("\n%s", pkt->msg);
+                return 1;
+            #endif
             break;
         default:
             return 1;
