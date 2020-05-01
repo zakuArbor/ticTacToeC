@@ -6,7 +6,7 @@ To compile the files, run `make`
 
 **Run the server:** `./game-server <PORT>
 
-** Run the client:** `./game-client <IP_ADDR> <PORT>`
+**Run the client:** `./game-client <IP_ADDR> <PORT>`
 
 ## ALGORITHMS
 
