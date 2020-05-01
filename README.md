@@ -1,37 +1,12 @@
 # ticTacToeC
 A C network Tic Tac Toe 
 
-## PLANS
-1. Create Board [<b>COMPLETED</b>]
-  
-  + void drawBoard(struct player *player1, struct player *player2, int num_pieces, int *pieces)
-2. Make Move [<b>COMPLETED</b>]
+## Usage
+To compile the files, run `make`
 
-  + void move(struct player *p, int *pieces) 
-3. isWin [<b>COMPLETED</b>]
-  
-  + check if the player wins
- 
-3. tie [<b>COMPLETED</b>]
-  + check if there is a tie after all pieces have been placed
+**Run the server:** `./game-server <PORT>
 
-3. Reset Game [<b>COMPLETED</b>]
-  + Reset game after the game finishes
-
-4. Add AI
-  
-  + use a general breadth search AI
-  
-5. Add socket
-  
-  + Add client and server
-    * Try using forks
-    * Think about using threads if applicable
-  
-6. GUI
-  
-  + Use a GUI library such as SDL or Allegro
-
+** Run the client:** `./game-client <IP_ADDR> <PORT>`
 
 ## ALGORITHMS
 
