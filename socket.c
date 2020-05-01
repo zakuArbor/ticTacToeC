@@ -54,10 +54,6 @@ void print(char *buf, int buf_len) {
 *	-1: error in read or no bytes read
 */
 int read_socket(int fd, char **buf, int *buf_len) {
-	printf("on read socket\n");
-	printf("before buf_len: %d\n", *buf_len);
-
-
 	int bytes_read = 0;
 	if (fd < 0 || !buf) {
 		return -1;
@@ -80,10 +76,6 @@ int read_socket(int fd, char **buf, int *buf_len) {
 	}
 	
 	*buf_len += bytes_read;
-
-	printf("bytes_read: %d\n", bytes_read);
-
-	print(*buf, *buf_len);
 
 	if ((*buf)[*buf_len-2] == '\r' && (*buf)[*buf_len - 1] == '\n') {
 		return 0;
@@ -166,8 +158,6 @@ int parse_packet(char **buf, int *buf_len, message_t *pkt) {
 		*buf_len = BUF_SIZE;
 	}
 
-	printf("parsing message\n");
-
 	/*
 	* STATES:
 	* 0 - get message type
@@ -208,7 +198,6 @@ int parse_packet(char **buf, int *buf_len, message_t *pkt) {
 				break;
 			case 3:
 				//msg_type(1B) + ' '(1B) + username(name_len B) + ' '(1B)
-				printf("msg: |%c| ", (*buf)[i]);
 				if ((*buf)[i] != '\r' && msg_len < MSG_SIZE - 1 - 1 - name_len - 1) {
 					msg_len++;
 				}
@@ -217,14 +206,9 @@ int parse_packet(char **buf, int *buf_len, message_t *pkt) {
 					pkt->msg[msg_len] = '\0';
 
 					//buf + start_index + msg_len + 2(network newline)
-					printf("before\n");
-					print(*buf, *buf_len);
 					int offset = start_index + msg_len + 2;
 					(*buf_len) -= offset;
 					memmove((*buf), *buf+offset, *buf_len);
-					printf("\t new buf len: %d\n", *buf_len);
-					printf("\t new buf: ");
-					print(*buf, *buf_len);
 					
 					return 0;
 				}
@@ -245,7 +229,6 @@ int parse_packet(char **buf, int *buf_len, message_t *pkt) {
 * @return: a non-zero if an error occurs
 */
 int format_packet(char *buf, int buf_len, char *username, int msg_type, message_t *pkt) {
-	printf("on format packet\n");
 	if (!username || strlen(username) >= USERNAME_SIZE || !buf || buf_len <= 0 || !pkt) {	
 		return 1;
 	}
@@ -260,7 +243,6 @@ int format_packet(char *buf, int buf_len, char *username, int msg_type, message_
 
 	strncpy(pkt->msg, buf, buf_len);
 	pkt->msg[buf_len] = '\0';
-	printf("packet format completed\n");
 	return 0;
 }
 
@@ -273,7 +255,6 @@ int format_packet(char *buf, int buf_len, char *username, int msg_type, message_
 */
 int packet_to_string(message_t *pkt, char **send_buf) {
 	if (!send_buf || !pkt) {
-		printf("should not be in here\n");
 		return 1;
 	}
 
@@ -282,7 +263,5 @@ int packet_to_string(message_t *pkt, char **send_buf) {
 	strncat(*send_buf, " ", 2);
 	strncat(*send_buf, pkt->msg, strlen(pkt->msg));
 	strncat(*send_buf, "\r\n", 3);
-	//printf("to send: %s\n", *send_buf);
-	print(*send_buf, strlen(*send_buf));
 	return 0;
 }

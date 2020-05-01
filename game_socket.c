@@ -1,4 +1,5 @@
 #include "game_socket.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,9 +21,7 @@ int move_player(player **players, int *num_moves, int *moves, int *player_num, c
     printf("move player: %d - piece: %d\n", move, moves[move]);
 
 	if (move >= 0 && move < 9 && moves[move] == -1) {
-        printf("pika move\n");
-		write_move(num_moves, moves, player_num, move);
-        printf("end pika move\n");
+        write_move(num_moves, moves, player_num, move);
         return move;
 	}
     return -1;
@@ -68,21 +67,16 @@ void send_tied_msg(player **players, message_t *pkt, char **send_buf) {
 */
 int packet_handler(message_t *pkt, char **send_buf, player **players, int *num_moves, int *moves, int *player_num, int fd) {
     char buf[BUF_SIZE];
-    printf("on pkt handler: %d\n", pkt->msg_type);
-    printf("%s", pkt->msg);
-    printf("\n===============\n");
-    for (int i = 0; i < 9; i++) { printf("%d \t", moves[i]); }
     switch(pkt->msg_type) {
         case GAME_MESSAGE:
             #ifdef CLIENT_MACRO
                 printf("\n%s", pkt->msg);
+                fflush(stdout);
             #endif
             break;
         case GAME_CONTROL:
             #ifdef CLIENT_MACRO
-                printf("\non game-control\n");
                 if (strncmp(pkt->msg, ASSIGN_CONTROL, strlen(ASSIGN_CONTROL)) == 0) {
-                    printf("username: %s\n", pkt->username);
                     int player_id = strtol(pkt->username, NULL, 10);
                     set_players(players, player_num, player_id);
                 }
@@ -92,6 +86,7 @@ int packet_handler(message_t *pkt, char **send_buf, player **players, int *num_m
             #ifdef SERVER_MACRO
             if (players[*player_num]->fd != fd) {
                 printf("Not %d turn\n", fd);
+                fflush(stdout);
                 break;
             }
             #endif
@@ -124,6 +119,34 @@ int packet_handler(message_t *pkt, char **send_buf, player **players, int *num_m
             break;
         default:
             return 1;
+    }
+    return 0;
+}
+
+int is_number(char *num_str) {
+    if (!num_str) {
+        return 0;
+    }
+    for (int i = 0; i < strlen(num_str); i++) {
+        if (!isdigit(num_str[i])) {
+            return 0;
+        }
+    }
+}
+
+int get_port(char *port_str) {
+    int port;
+
+    if (!port_str) {
+        return 0;
+    }
+    if (!is_number(port_str)) {
+        return 0;
+    }
+    
+    port = strtol(port_str, NULL, 10);
+    if (port >= 1024 && port <= 65535) {
+        return port;
     }
     return 0;
 }

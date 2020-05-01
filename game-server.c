@@ -101,9 +101,10 @@ int read_from(int client_index, player **players, int player_1, int connections)
 *
 * @param sock_fd: to store the server's file descriptor
 * @param server: the socket information to set
+* @param the port to bind the application to
 * @return: return non-zero if there is an issue
 */
-int server_setup(int *sock_fd, struct sockaddr_in *server) {
+int server_setup(int *sock_fd, struct sockaddr_in *server, int port) {
     *sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (*sock_fd < 0) {
         perror("server: socket");
@@ -112,7 +113,7 @@ int server_setup(int *sock_fd, struct sockaddr_in *server) {
 
     // Set information about the port (and IP) we want to be connected to.
     server->sin_family = AF_INET;
-    server->sin_port = htons(PORT);
+    server->sin_port = htons(port);
     (server->sin_addr).s_addr = INADDR_ANY;
     
     //initialize to zero to avoid any possible issues
@@ -130,8 +131,12 @@ int server_setup(int *sock_fd, struct sockaddr_in *server) {
     }
 }
 
+void display_usage(char *prog) {
+    printf("usage: %s <PORT>\n", prog);
+    printf("\tPORT: Range must be within 1024 to 65535\n");
+}
 
-int main(void) {	
+int main(int argc, char **argv) {	
 	player **players;
     struct sockaddr_in server;
     int sock_fd = -1;
@@ -149,6 +154,19 @@ int main(void) {
                             // 0 <= connections <= 2
 	int player_1 = -1;      //keeps track who is the first player to choose their piece
     int state = START_STATE;//the state of the game
+    int port = 30002;
+
+    if (argc < 2) {
+        display_usage(argv[0]);
+        return 1;
+    }
+
+    if (!(port = get_port(argv[1]))) {
+        fprintf(stderr, "Error: Invalid Port Number\n");
+        display_usage(argv[0]);
+        return 1;
+    }
+    printf("port: %d\n", port);
 
 	if (!(players = initGame(moves, &num_moves, &player_num))) {
 		return(1);
@@ -158,7 +176,7 @@ int main(void) {
         goto terminate;
     }
     
-    if (server_setup(&sock_fd, &server) != 0) {
+    if (server_setup(&sock_fd, &server, port) != 0) {
         goto terminate;
     }
 
@@ -182,16 +200,12 @@ int main(void) {
             strncpy(username, ADMIN_USERNAME, strlen(ADMIN_USERNAME));
             username[strlen(ADMIN_USERNAME)] = '\0';
 
-
             format_packet(buf, strlen(buf), username, GAME_MESSAGE, &pkt);
-            packet_to_string(&pkt, &send_buf);
-            
-            printf("indicate player first\n");
-               
+            packet_to_string(&pkt, &send_buf);      
+            broadcast_socket(send_buf, strlen(send_buf), (void **)players, 2, PLAYER);  
 
             char username_assign[2];
             snprintf(username_assign, 2, "%d", player_num);
-            printf("username assign: %s\n", username_assign);
             strncpy(buf, ASSIGN_CONTROL, strlen(ASSIGN_CONTROL));
             buf[strlen(ASSIGN_CONTROL)] = '\0';
 
@@ -239,7 +253,6 @@ int main(void) {
         for (int index = 0; index < MAX_CONNECTIONS; index++) {
             if (players[index]->fd > -1 && FD_ISSET(players[index]->fd, &listen_fds)) {
                 //int client_closed = read_from(index, players, player_1, connections);
-                printf("send: %p\n", players[index]->buf);
                 int client_closed = read_socket(players[index]->fd, &(players[index]->buf), &(players[index]->buf_len));
                 if (client_closed < 0) {
                     FD_CLR(players[index]->fd, &all_fds);
@@ -251,7 +264,6 @@ int main(void) {
                     if (state == GAME_STATE) {
                         packet_handler(&pkt, &send_buf, players, &num_moves, moves, &player_num, players[index]->fd);
                     }
-                    //broadcast_socket(players[index]->buf, players[index]->buf_len, (void **)players, 2, PLAYER);
                 }
             }
         }

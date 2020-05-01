@@ -56,8 +56,44 @@ void set_players(player **players, int *player_num, int first_player_id) {
     }
 }
 
+int validate_ip_addr(char *ip_addr) {
+    int i = 0, bytes = 0, value;
+    char *token;
 
-int main(void) { 
+    if (!ip_addr) {
+        return 0;
+    }
+
+    if (!(token = strtok(ip_addr, "."))) {
+        return 0;
+    }
+
+    while (token) {
+        if (!is_number(token)) {
+            return 0;
+        }
+        value = strtol(token, NULL, 10);
+        if (value < 0 || value > 255) {
+            return 0;
+        }
+
+        bytes++;
+        token = strtok(NULL, ".");
+    }
+
+    if (bytes == 4) {
+        return 1;
+    }
+    return 0;
+}
+
+void display_usage(char *prog) {
+    printf("usage: %s <IP_ADDR> <PORT> [player]\n", prog);
+    printf("\tPORT: Range must be within 1024 to 65535\n");
+}
+
+
+int main(int argc, void **argv) { 
     char *buf, *buf_stdin;
     char *send_buf;
     message_t pkt;
@@ -71,6 +107,26 @@ int main(void) {
     int player_1 = -1;      //keeps track who is the first player to choose their piece
     int terminate = 0;
     int num_read = 0, buf_len = 0;
+    int port = 30002;
+
+    if (argc < 3) {
+        fprintf(stderr, "Error: Insufficient arguments\n");
+        display_usage(argv[0]);
+        return 1;
+    }
+
+    if (!validate_ip_addr(argv[1])) {
+        fprintf(stderr, "Error: Invalid IP Address\n");
+        display_usage(argv[0]);
+        return 1;
+    }
+    
+    if (!(port = get_port(argv[2]))) {
+        fprintf(stderr, "Error: Invalid Port Number\n");
+        display_usage(argv[0]);
+        return 1;
+    }
+    printf("port: %d\n", port);
 
     if (!(players = initGame(moves, &num_moves, &player_num))) {
         return(1);
@@ -98,7 +154,7 @@ int main(void) {
     // Set the IP and port of the server to connect to.
     struct sockaddr_in server;
     server.sin_family = AF_INET;
-    server.sin_port = htons(PORT);
+    server.sin_port = htons(port);
     if (inet_pton(AF_INET, "127.0.0.1", &server.sin_addr) < 1) {
         perror("client: inet_pton");
         close(sock_fd);
@@ -121,6 +177,7 @@ int main(void) {
 
     while (!terminate) {
         FD_SET(sock_fd, &fdset);
+
         FD_SET(fileno(stdin), &fdset);
         if (select(sock_fd + 1, &fdset, NULL, NULL, NULL) < 0) {
             perror("select");
@@ -134,15 +191,11 @@ int main(void) {
             if (buf_stdin[num_read-1] == '\n') {
                 num_read -=1;
             }
-            /*buf_stdin[num_read] = '\r';
-            buf_stdin[num_read + 1] = '\n';
-            num_read +=2;*/
 
-            
             format_packet(buf_stdin, num_read, "Player1", PLAYER_ACTION, &pkt);
             packet_to_string(&pkt, &send_buf);
             write_socket(sock_fd, send_buf, strlen(send_buf));
-        }
+        } 
 
         if (FD_ISSET(sock_fd, &fdset)) {
             int client_closed = read_socket(sock_fd, &buf, &buf_len);
@@ -152,7 +205,6 @@ int main(void) {
             else if (client_closed == 0) {    
                 while (find_network_newline(&buf, buf_len) != -1) {
                     parse_packet(&buf, &buf_len, &pkt);
-                    printf("buf_len: %d\n", buf_len);
                     if (packet_handler(&pkt, &send_buf, players, &num_moves, moves, &player_num, 0) == 1) {
                         terminate = 1;
                         break;

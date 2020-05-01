@@ -4,9 +4,6 @@
 
 #define SOCKET_H
 
-#ifndef PORT
-  #define PORT 30002
-#endif
 #define BUF_SIZE 1024
 #define MSG_SIZE 500
 #define USERNAME_SIZE 20
